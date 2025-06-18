@@ -14,7 +14,7 @@ class yandex{
 		// backend included in the scraper functions
 	}
 	
-	private function get($proxy, $url, $get = [], $nsfw){
+	private function get($proxy, $url, $get = [], $nsfw, $get_cookie = 1){
 		
 		$curlproc = curl_init();
 		
@@ -25,10 +25,46 @@ class yandex{
 		
 		curl_setopt($curlproc, CURLOPT_URL, $url);
 		
+		// extract "i" cookie
+		if($get_cookie === 0){
+			
+			$cookies_tmp = [];
+			curl_setopt($curlproc, CURLOPT_HEADERFUNCTION, function($curlproc, $header) use (&$cookies_tmp){
+				
+				$length = strlen($header);
+				
+				$header = explode(":", $header, 2);
+				
+				if(trim(strtolower($header[0])) == "set-cookie"){
+					
+					$cookie_tmp = explode("=", trim($header[1]), 2);
+					
+					$cookies_tmp[trim($cookie_tmp[0])] =
+						explode(";", $cookie_tmp[1], 2)[0];
+				}
+				
+				return $length;
+			});
+		}
+		
 		switch($nsfw){
 			case "yes": $nsfw = "0"; break;
 			case "maybe": $nsfw = "1"; break;
 			case "no": $nsfw = "2"; break;
+		}
+		
+		switch($get_cookie){
+			
+			case 0:
+				$cookie = "";
+				break;
+			
+			case 1:
+				$cookie = "Cookie: yp=" . (time() - 4000033) . ".szm.1:1920x1080:876x1000#" . time() . ".sp.family:" . $nsfw;
+				break;
+			
+			default:
+				$cookie = "Cookie: i=" . $get_cookie;
 		}
 		
 		$headers =
@@ -37,7 +73,7 @@ class yandex{
 			"Accept-Encoding: gzip",
 			"Accept-Language: en-US,en;q=0.5",
 			"DNT: 1",
-			"Cookie: yp=" . (time() - 4000033) . ".szm.1:1920x1080:876x1000#" . time() . ".sp.family:" . $nsfw,
+			$cookie,
 			"Referer: https://yandex.com/images/search",
 			"Connection: keep-alive",
 			"Upgrade-Insecure-Requests: 1",
@@ -58,6 +94,17 @@ class yandex{
 		$this->backend->assign_proxy($curlproc, $proxy);
 		
 		$data = curl_exec($curlproc);
+		
+		if($get_cookie === 0){
+			
+			if(isset($cookies_tmp["i"])){
+				
+				return $cookies_tmp["i"];
+			}else{
+				
+				throw new Exception("Failed to get Yandex clearance cookie");
+			}
+		}
 		
 		if(curl_errno($curlproc)){
 			
@@ -217,6 +264,23 @@ class yandex{
 		// https://yandex.com/search/site/?text=minecraft&web=1&frame=1&v=2.0&searchid=3131712
 		// &within=777&from_day=26&from_month=8&from_year=2023&to_day=26&to_month=8&to_year=2023
 		
+		// get clearance cookie
+		if(($cookie = apcu_fetch("yandexweb_cookie")) === false){
+			
+			$proxy = $this->backend->get_ip();
+			
+			$cookie =
+				$this->get(
+					$proxy,
+					"https://yandex.ru/support2/smart-captcha/ru/",
+					[],
+					false,
+					0
+				);
+			
+			apcu_store("yandexweb_cookie", $cookie);
+		}
+		
 		if($get["npt"]){
 			
 			[$npt, $proxy] = $this->backend->get($get["npt"], "web");
@@ -226,7 +290,8 @@ class yandex{
 					$proxy,
 					"https://yandex.com" . $npt,
 					[],
-					"yes"
+					"yes",
+					$cookie
 				);
 		}else{
 			
@@ -236,7 +301,7 @@ class yandex{
 				throw new Exception("Search term is empty!");
 			}
 			
-			$proxy = $this->backend->get_ip();
+			$proxy = !isset($proxy) ? $this->backend->get_ip() : $proxy;
 			$lang = $get["lang"];
 			$older = $get["older"];
 			$newer = $get["newer"];
@@ -283,7 +348,8 @@ class yandex{
 						$proxy,
 						"https://yandex.com/search/site/",
 						$params,
-						"yes"
+						"yes",
+						$cookie
 					);
 			}catch(Exception $error){
 				
@@ -313,6 +379,19 @@ class yandex{
 		];
 		
 		$this->fuckhtml->load($html);
+		
+		// Scrape page blocked error
+		$title =
+			$this->fuckhtml
+			->getElementsByTagName("title");
+		
+		if(
+			count($title) !== 0 &&
+			$title[0]["innerHTML"] == "403"
+		){
+			
+			throw new Exception("Yandex blocked this proxy or 4get instance.");
+		}
 		
 		// get nextpage
 		$npt =
