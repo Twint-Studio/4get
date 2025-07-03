@@ -24,7 +24,7 @@ class anubis{
 				"script"
 			);
 		
-		if(count($script) === 0){
+		if($script === false){
 			
 			throw new Exception("Failed to scrape anubis challenge data");
 		}

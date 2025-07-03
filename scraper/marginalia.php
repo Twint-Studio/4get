@@ -317,14 +317,19 @@ class marginalia{
 		//
 		// Bypass anubis check
 		//
+		/*
 		if(($anubis_key = apcu_fetch("marginalia_cookie")) === false){
 			
 			try{
 				$html =
 					$this->get(
 						$proxy,
-						"https://old-search.marginalia.nu/"
+						"https://old-search.marginalia.nu/search",
+						[
+							"query" => $search
+						]
 					);
+					
 			}catch(Exception $error){
 				
 				throw new Exception("Failed to get anubis challenge");
@@ -361,7 +366,7 @@ class marginalia{
 			}
 			
 			apcu_store("marginalia_cookie", $anubis_key);
-		}
+		}*/
 		
 		if($get["npt"]){
 			
@@ -377,7 +382,7 @@ class marginalia{
 						$proxy,
 						"https://old-search.marginalia.nu/search?" . $params,
 						[],
-						$anubis_key
+						//$anubis_key
 					);
 			}catch(Exception $error){
 				
@@ -408,7 +413,7 @@ class marginalia{
 						$proxy,
 						"https://old-search.marginalia.nu/search",
 						$params,
-						$anubis_key
+						//$anubis_key
 					);
 			}catch(Exception $error){
 				
