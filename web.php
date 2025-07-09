@@ -89,7 +89,7 @@ if($results["spelling"]["type"] != "no_correction"){
 			'&' .
 			$frontend->buildquery($get, true) .
 			'&spellcheck=no">' .
-			$results["spelling"]["correction"] .
+			htmlspecialchars($results["spelling"]["correction"]) .
 			'</a>?' .
 		'</div>';
 }
