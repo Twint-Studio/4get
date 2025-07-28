@@ -39,12 +39,13 @@ tl;dr 4get is the best way to browse for shit.
 | Google     | Google       | Yandex     | Startpage  |            | Google        |
 | Startpage  | Startpage    | Google     | Qwant      |            | Startpage     |
 | Qwant      | Qwant        | Startpage  | Mojeek     |            | Kagi          |
-| Ghostery   | Yep          | Qwant      |            |            | Qwant         |
-| Yep        | Solofield    | Solofield  |            |            | Ghostery      |
-| Greppr     | Pinterest    |            |            |            | Yep           |
-| Crowdview  | 500px        |            |            |            | Marginalia    |
-| Mwmbl      | VSCO         |            |            |            | YouTube       |
-| Mojeek     | Imgur        |            |            |            | Soundcloud    |
+| Ghostery   | Yep          | Qwant      | Baidu      |            | Qwant         |
+| Yep        | Baidu        | Baidu      |            |            | Ghostery      |
+| Greppr     | Solofield    | Solofield  |            |            | Yep           |
+| Crowdview  | Pinterest    |            |            |            | Marginalia    |
+| Mwmbl      | 500px        |            |            |            | YouTube       |
+| Mojeek     | VSCO         |            |            |            | Soundcloud    |
+| Baidu      | Imgur        |            |            |            |               |
 | Solofield  | FindThatMeme |            |            |            |               |
 | Marginalia |              |            |            |            |               |
 | wiby       |              |            |            |            |               |
