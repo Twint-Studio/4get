@@ -170,6 +170,10 @@ $settings = [
 						"text" => "Mojeek"
 					],
 					[
+						"value" => "baidu",
+						"text" => "Baidu"
+					],
+					[
 						"value" => "solofield",
 						"text" => "Solofield"
 					],
@@ -222,6 +226,10 @@ $settings = [
 					[
 						"value" => "yep",
 						"text" => "Yep"
+					],
+					[
+						"value" => "baidu",
+						"text" => "Baidu"
 					],
 					[
 						"value" => "solofield",
@@ -286,6 +294,10 @@ $settings = [
 						"text" => "Qwant"
 					],
 					[
+						"value" => "baidu",
+						"text" => "Baidu"
+					],
+					[
 						"value" => "solofield",
 						"text" => "Solofield"
 					]
@@ -322,6 +334,10 @@ $settings = [
 					[
 						"value" => "mojeek",
 						"text" => "Mojeek"
+					],
+					[
+						"value" => "baidu",
+						"text" => "Baidu"
 					]
 				]
 			],
