@@ -950,7 +950,8 @@ class frontend{
 						"mwmbl" => "Mwmbl",
 						"mojeek" => "Mojeek",
 						"baidu" => "Baidu",
-						"solofield" => "Solofield",
+						"coccoc" => "Cốc Cốc",
+						//"solofield" => "Solofield",
 						"marginalia" => "Marginalia",
 						"wiby" => "wiby",
 						"curlie" => "Curlie"
@@ -971,7 +972,7 @@ class frontend{
 						"qwant" => "Qwant",
 						"yep" => "Yep",
 						"baidu" => "Baidu",
-						"solofield" => "Solofield",
+						//"solofield" => "Solofield",
 						"pinterest" => "Pinterest",
 						"flickr" => "Flickr",
 						"fivehpx" => "500px",
@@ -996,7 +997,8 @@ class frontend{
 						"startpage" => "Startpage",
 						"qwant" => "Qwant",
 						"baidu" => "Baidu",
-						"solofield" => "Solofield"
+						"coccoc" => "Cốc Cốc"
+						//"solofield" => "Solofield"
 					]
 				];
 				break;
@@ -1337,7 +1339,7 @@ class frontend{
 			return htmlspecialchars($image);
 		}
 		
-		return "/proxy?i=" . urlencode($image) . "&s=" . $format;
+		return "https://4get.ca/proxy?i=" . urlencode($image) . "&s=" . $format;
 	}
 	
 	public function htmlnextpage($gets, $npt, $page){
