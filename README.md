@@ -41,12 +41,12 @@ tl;dr 4get is the best way to browse for shit.
 | Qwant      | Qwant        | Startpage  | Mojeek     |            | Kagi          |
 | Ghostery   | Yep          | Qwant      | Baidu      |            | Qwant         |
 | Yep        | Baidu        | Baidu      |            |            | Ghostery      |
-| Greppr     | Solofield    | Solofield  |            |            | Yep           |
-| Crowdview  | Pinterest    |            |            |            | Marginalia    |
-| Mwmbl      | 500px        |            |            |            | YouTube       |
-| Mojeek     | VSCO         |            |            |            | Soundcloud    |
-| Baidu      | Imgur        |            |            |            |               |
-| Solofield  | FindThatMeme |            |            |            |               |
+| Greppr     | Pinterest    | Coc Coc    |            |            | Yep           |
+| Crowdview  | 500px        |            |            |            | Marginalia    |
+| Mwmbl      | VSCO         |            |            |            | YouTube       |
+| Mojeek     | Imgur        |            |            |            | Soundcloud    |
+| Baidu      | FindThatMeme |            |            |            |               |
+| Coc Coc    |              |            |            |            |               |
 | Marginalia |              |            |            |            |               |
 | wiby       |              |            |            |            |               |
 | Curlie     |              |            |            |            |               |
