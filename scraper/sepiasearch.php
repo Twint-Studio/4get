@@ -154,17 +154,18 @@ class sepiasearch{
 			$curlproc,
 			CURLOPT_HTTPHEADER,
 			["User-Agent: " . config::USER_AGENT,
-			"Accept: */*",
+			"Accept: application/json, text/plain, */*",
 			"Accept-Language: en-US,en;q=0.5",
-			"Accept-Encoding: gzip",
-			"Cookie: PREF=tz=America.New_York",
-			"Referer: https://youtube.com.com/",
-			"Content-Type: application/json",
+			"Accept-Encoding: gzip, deflate, br, zstd",
 			"DNT: 1",
+			"Sec-GPC: 1",
 			"Connection: keep-alive",
+			"Referer: https://sepiasearch.org/search",
 			"Sec-Fetch-Dest: empty",
-			"Sec-Fetch-Mode: same-origin",
-			"Sec-Fetch-Site: same-origin"]
+			"Sec-Fetch-Mode: cors",
+			"Sec-Fetch-Site: same-origin",
+			"Priority: u=0",
+			"TE: trailers"]
 		);
 		
 		curl_setopt($curlproc, CURLOPT_RETURNTRANSFER, true);
