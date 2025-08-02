@@ -31,25 +31,25 @@ tl;dr 4get is the best way to browse for shit.
 
 # Supported websites
 
-| Web        | Images       | Videos     | News       | Music      | Autocompleter |
-|------------|--------------|------------|------------|------------|---------------|
-| DuckDuckGo | DuckDuckGo   | YouTube    | DuckDuckGo | Soundcloud | Brave         |
-| Brave      | Brave        | DuckDuckGo | Brave      |            | DuckDuckGo    |
-| Yandex     | Yandex       | Brave      | Google     |            | Yandex        |
-| Google     | Google       | Yandex     | Startpage  |            | Google        |
-| Startpage  | Startpage    | Google     | Qwant      |            | Startpage     |
-| Qwant      | Qwant        | Startpage  | Mojeek     |            | Kagi          |
-| Ghostery   | Yep          | Qwant      | Baidu      |            | Qwant         |
-| Yep        | Baidu        | Baidu      |            |            | Ghostery      |
-| Greppr     | Pinterest    | Coc Coc    |            |            | Yep           |
-| Crowdview  | 500px        |            |            |            | Marginalia    |
-| Mwmbl      | VSCO         |            |            |            | YouTube       |
-| Mojeek     | Imgur        |            |            |            | Soundcloud    |
-| Baidu      | FindThatMeme |            |            |            |               |
-| Coc Coc    |              |            |            |            |               |
-| Marginalia |              |            |            |            |               |
-| wiby       |              |            |            |            |               |
-| Curlie     |              |            |            |            |               |
+| Web        | Images       | Videos       | News       | Music      | Autocompleter |
+|------------|--------------|--------------|------------|------------|---------------|
+| DuckDuckGo | DuckDuckGo   | YouTube      | DuckDuckGo | Soundcloud | Brave         |
+| Brave      | Brave        | Sepia Search | Brave      |            | DuckDuckGo    |
+| Yandex     | Yandex       | DuckDuckGo   | Google     |            | Yandex        |
+| Google     | Google       | Brave        | Startpage  |            | Google        |
+| Startpage  | Startpage    | Yandex       | Qwant      |            | Startpage     |
+| Qwant      | Qwant        | Google       | Mojeek     |            | Kagi          |
+| Ghostery   | Yep          | Startpage    | Baidu      |            | Qwant         |
+| Yep        | Baidu        | Qwant        |            |            | Ghostery      |
+| Greppr     | Pinterest    | Baidu        |            |            | Yep           |
+| Crowdview  | 500px        | Coc Coc      |            |            | Marginalia    |
+| Mwmbl      | VSCO         |              |            |            | YouTube       |
+| Mojeek     | Imgur        |              |            |            | Soundcloud    |
+| Baidu      | FindThatMeme |              |            |            |               |
+| Coc Coc    |              |              |            |            |               |
+| Marginalia |              |              |            |            |               |
+| wiby       |              |              |            |            |               |
+| Curlie     |              |              |            |            |               |
 
 # Installation
 Refer to the <a href="https://git.lolcat.ca/lolcat/4get/src/branch/master/docs/">documentation index</a>. I recommend following the <a href="https://git.lolcat.ca/lolcat/4get/src/branch/master/docs/apache2.md">apache2 guide</a>.

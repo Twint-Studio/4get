@@ -989,6 +989,7 @@ class frontend{
 					"display" => "Scraper",
 					"option" => [
 						"yt" => "YouTube",
+						"sepiasearch" => "Sepia Search",
 						//"fb" => "Facebook videos",
 						"ddg" => "DuckDuckGo",
 						"brave" => "Brave",
@@ -998,7 +999,6 @@ class frontend{
 						"qwant" => "Qwant",
 						"baidu" => "Baidu",
 						"coccoc" => "Cốc Cốc"
-						//"sepiasearch" => "Sepia Search"
 						//"solofield" => "Solofield"
 					]
 				];
