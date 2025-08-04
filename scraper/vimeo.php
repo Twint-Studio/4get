@@ -680,7 +680,7 @@ class vimeo{
 				throw new Exception("Failed to fetch JWT token");
 			}
 			
-			$this->fuckhtml->load($html);
+			$this->fuckhtml->load($json);
 			
 			$captcha =
 				$this->fuckhtml
