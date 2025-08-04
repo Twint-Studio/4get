@@ -266,6 +266,10 @@ $settings = [
 						"text" => "YouTube"
 					],
 					[
+						"value" => "vimeo",
+						"text" => "Vimeo"
+					],
+					[
 						"value" => "sepiasearch",
 						"text" => "Sepia Search"
 					],

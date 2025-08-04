@@ -144,6 +144,7 @@ class config{
 	const PROXY_CURLIE = false;
 	const PROXY_YT = false; // youtube
 	const PROXY_SEPIASEARCH = false;
+	const PROXY_VIMEO = false;
 	const PROXY_YEP = false;
 	const PROXY_PINTEREST = false;
 	const PROXY_SANKAKUCOMPLEX = false;

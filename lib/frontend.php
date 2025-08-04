@@ -989,6 +989,7 @@ class frontend{
 					"display" => "Scraper",
 					"option" => [
 						"yt" => "YouTube",
+						"vimeo" => "Vimeo",
 						"sepiasearch" => "Sepia Search",
 						//"fb" => "Facebook videos",
 						"ddg" => "DuckDuckGo",
