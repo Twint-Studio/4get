@@ -152,20 +152,20 @@ class vimeo{
 				$curlproc,
 				CURLOPT_HTTPHEADER,
 				["User-Agent: " . config::USER_AGENT,
-				"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+				"Accept: */*",
 				"Accept-Language: en-US,en;q=0.5",
 				"Accept-Encoding: gzip, deflate, br, zstd",
-				"Referer: https://vimeo.com/watch",
+				"Referer: https://vimeo.com/search",
+				"X-Requested-With: XMLHttpRequest",
 				"DNT: 1",
 				"Sec-GPC: 1",
 				"Connection: keep-alive",
-				"Cookie: _dd_s=isExpired=1", // &aid=959c58f0-e5fe-48f6-bd54-e247d92d317a
-				"Upgrade-Insecure-Requests: 1",
-				"Sec-Fetch-Dest: document",
-				"Sec-Fetch-Mode: navigate",
+				"Sec-Fetch-Dest: empty",
+				"Sec-Fetch-Mode: cors",
 				"Sec-Fetch-Site: same-origin",
-				"Priority: u=0, i"]
+				"Priority: u=4"]
 			);
+			
 		}else{
 			
 			curl_setopt(
@@ -605,7 +605,7 @@ class vimeo{
 		$jwt = apcu_fetch("vimeo_jwt");
 		
 		if($jwt === false){
-			
+			/*
 			$html =
 				$this->get(
 					$proxy,
@@ -665,6 +665,29 @@ class vimeo{
 			}
 			
 			$jwt = $jwt["jwt"];
+			*/
+			
+			$json =
+				$this->get(
+					$proxy,
+					"https://vimeo.com/_next/jwt",
+					[],
+					false
+				);
+			
+			$json = json_decode($json, true);
+			
+			if($json === null){
+				
+				throw new Exception("The JWT object could not be decoded");
+			}
+			
+			if(!isset($json["token"])){
+				
+				throw new Exception("Vimeo did not return a JWT");
+			}
+			
+			$jwt = $json["token"];
 			
 			apcu_store("vimeo_jwt", $jwt, 300);
 		}
