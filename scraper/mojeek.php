@@ -692,17 +692,18 @@ class mojeek{
 				preg_match(
 					'/\/image\?img=([^&]+)/i',
 					$thumb[0]["attributes"]["src"],
-					$thumb
+					$matches
 				);
 				
-				if(count($thumb) === 2){
+				if(count($matches) === 2){
 					
+					// for some reason, if we dont get the image from mojeek
+					// it sometimes fail to fetch the right image URL
 					$answer["thumb"] =
-						urldecode(
-							$this->fuckhtml
-							->getTextContent(
-								$thumb[1]
-							)
+						"https://mojeek.com" .
+						$this->fuckhtml
+						->getTextContent(
+							$thumb[0]["attributes"]["src"]
 						);
 				}
 			}
