@@ -457,7 +457,7 @@ class mojeek{
 				"tn" => 7, // number of news results/page
 				"date" => 1, // show date
 				"tlen" => 128, // max length of title
-				"dlen" => 511, // max length of description
+				//"dlen" => 511, // max length of description
 				"arc" => ($country == "any" ? "none" : $country) // location. don't use autodetect!
 			];
 			
