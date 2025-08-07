@@ -1053,13 +1053,15 @@ class ddg{
 						];
 				}
 				
+				var_dump($json);
+				
 				$out["answer"][] = [
 					"title" => $json["Heading"],
 					"description" => $description,
 					"url" => $json["AbstractURL"],
 					"thumb" =>
-						(isset($json["Image"]) && $json["Image"]) !== null ?
-						"https://duckduckgo.com" . $json["Image"] : null,
+						(!isset($json["Image"]) || $json["Image"] == "" || $json["Image"] === null) ?
+						null : "https://duckduckgo.com" . $json["Image"],
 					"table" => $table,
 					"sublink" => $sublinks
 				];
