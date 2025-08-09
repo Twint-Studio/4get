@@ -144,6 +144,7 @@ class config{
 	const PROXY_CURLIE = false;
 	const PROXY_YT = false; // youtube
 	const PROXY_SEPIASEARCH = false;
+	const PROXY_ODYSEE = false;
 	const PROXY_VIMEO = false;
 	const PROXY_YEP = false;
 	const PROXY_PINTEREST = false;
@@ -158,6 +159,7 @@ class config{
 	const PROXY_MWMBL = false;
 	const PROXY_FTM = false; // findthatmeme
 	const PROXY_IMGUR = false;
+	const PROXY_CARA = false;
 	const PROXY_YANDEX_W = false; // yandex web
 	const PROXY_YANDEX_I = false; // yandex images
 	const PROXY_YANDEX_V = false; // yandex videos
