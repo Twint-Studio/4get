@@ -45,7 +45,7 @@ Now, after compiling, you should have a `libcurl-impersonate-ff.so` sitting some
 sudo su
 LD_PRELOAD=/usr/local/lib/libcurl-impersonate-ff.so
 CURL_IMPERSONATE=firefox117
-patchelf --set-soname libcurl.so.4 `/usr/local/lib/libcurl-impersonate-ff.so
+patchelf --set-soname libcurl.so.4 /usr/local/lib/libcurl-impersonate-ff.so
 ldconfig
 ```
 
