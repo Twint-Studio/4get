@@ -65,6 +65,13 @@ root@fuckedmachine:/# php -r 'print_r(curl_version());' | grep ssl_version
 
 It's very hacky, yes thank you for noticing. There's also the option of using the [forked project](https://github.com/lexiforest/curl-impersonate), but that garbage doesn't support NSS. I'm kind of against impersonating chrome cause you never know when Google is gonna add more fingerprinting bullshit.
 
+If you want a functioning `curl` command line utility again, you can do the following hack:
+
+```
+sudo apt remove curl
+sudo ln -s /usr/local/bin/curl-impersonate-ff /usr/bin/curl
+```
+
 # Robots.txt
 Make sure you configure this right to optimize your search engine presence! Head over to `/robots.txt` and change the 4get.ca domain to your own domain.
 
