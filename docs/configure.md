@@ -21,22 +21,13 @@ First, compile curl-impersonate (the firefox flavor).
 ```sh
 git clone https://github.com/lwthiker/curl-impersonate/
 cd curl-impersonate
-sudo apt install build-essential pkg-config cmake ninja-build curl autoconf automake libtool python3-pip libnss3
+sudo apt install build-essential pkg-config cmake ninja-build curl autoconf automake libtool python3-pip libnss3 libnss3-dev
 mkdir build
 cd build
 ../configure
 make firefox-build
 sudo make firefox-install
 sudo ldconfig
-```
-
-Once you did this, you should be able to run the following inside your terminal:
-```sh
-$ curl_ff117 --version
-curl 8.1.1 (x86_64-pc-linux-gnu) libcurl/8.1.1 NSS/3.92 zlib/1.2.13 brotli/1.0.9 zstd/1.5.4 libidn2/2.3.3 nghttp2/1.56.0
-Release-Date: 2023-05-23
-Protocols: dict file ftp ftps gopher gophers http https imap imaps mqtt pop3 pop3s rtsp smb smbs smtp smtps telnet tftp ws wss
-Features: alt-svc AsynchDNS brotli HSTS HTTP2 HTTPS-proxy IDN IPv6 Largefile libz NTLM NTLM_WB SSL threadsafe UnixSockets zstd
 ```
 
 Now, after compiling, you should have a `libcurl-impersonate-ff.so` sitting somewhere. Mine is located at `/usr/local/lib/libcurl-impersonate-ff.so`. Do some patch fuckery:
@@ -56,16 +47,16 @@ curl: /usr/local/lib/libcurl.so.4: no version information available (required by
 curl: symbol lookup error: curl: undefined symbol: curl_global_trace, version CURL_OPENSSL_4
 ```
 
-Which sucks balls, but you should be able to run this:
+Or not... During testing, I've seen that sometimes curl still works for some reason. What really matters is the output of this command:
 ```
 root@fuckedmachine:/# php -r 'print_r(curl_version());' | grep ssl_version
     [ssl_version_number] => 0
     [ssl_version] => NSS/3.92
 ```
 
-It's very hacky, yes thank you for noticing. There's also the option of using the [forked project](https://github.com/lexiforest/curl-impersonate), but that garbage doesn't support NSS. I'm kind of against impersonating chrome cause you never know when Google is gonna add more fingerprinting bullshit.
+It **MUST** say NSS, otherwise it didn't work. There's also the option of using the [forked project](https://github.com/lexiforest/curl-impersonate), but that garbage doesn't support NSS. I'm kind of against impersonating chrome cause you never know when Google is gonna add more fingerprinting bullshit.
 
-If you want a functioning `curl` command line utility again, you can do the following hack:
+Appendix: If you want a functioning `curl` command line utility again in case it doesn't work anymore, you can do the following hack:
 
 ```
 sudo apt remove curl
