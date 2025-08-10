@@ -402,24 +402,30 @@ class frontend{
 		
 		$text =
 			trim(
-				str_replace(
-					[
-						"<br />",
-						"&nbsp;",
-						"<pre>",
-						"</pre>"
-					],
-					[
-						"\n",
-						" ",
-						"",
-						""
-					],
-					explode(
-						"&lt;?php",
-						highlight_string("<?php " . $text, true),
-						2
-					)[1]
+				preg_replace(
+					'/<code [^>]+>/',
+					"",
+					str_replace(
+						[
+							"<br />",
+							"&nbsp;",
+							"<pre>",
+							"</pre>",
+							"</code>"
+						],
+						[
+							"\n",
+							" ",
+							"",
+							"",
+							""
+						],
+						explode(
+							"&lt;?php",
+							highlight_string("<?php " . $text, true),
+							2
+						)[1]
+					)
 				)
 			);
 		
