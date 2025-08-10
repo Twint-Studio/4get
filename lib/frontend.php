@@ -402,29 +402,24 @@ class frontend{
 		
 		$text =
 			trim(
-				preg_replace(
-					'/<\/span>$/',
-					"", // remove stray ending span because of the <?php stuff
-					str_replace(
-						[
-							'<br />',
-							'&nbsp;'
-						],
-						[
-							"\n", // replace <br> with newlines
-							" " // replace html entity to space
-						],
-						str_replace(
-							[
-								// leading <?php garbage
-								"<span style=\"color: c-default\">\n&lt;?php&nbsp;",
-								"<code>",
-								"</code>"
-							],
-							"",
-							highlight_string("<?php " . $text, true)
-						)
-					)
+				str_replace(
+					[
+						"<br />",
+						"&nbsp;",
+						"<pre>",
+						"</pre>"
+					],
+					[
+						"\n",
+						" ",
+						"",
+						""
+					],
+					explode(
+						"&lt;?php",
+						highlight_string("<?php " . $text, true),
+						2
+					)[1]
 				)
 			);
 		
