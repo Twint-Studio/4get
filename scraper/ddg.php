@@ -1974,17 +1974,13 @@ class ddg{
 		
 		if(count($tags) === 0){
 			
-			$description = [
+			$description[] = [
 				"type" => "text",
 				"value" =>
 					trim(
 						$this->fuckhtml
 						->getTextContent(
-							substr(
-								$html,
-								$start,
-								$tag["startPos"] - $start
-							),
+							$html,
 							true,
 							false
 						)
