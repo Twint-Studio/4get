@@ -1046,20 +1046,38 @@ class ddg{
 				
 				if(isset($json["Abstract"])){
 					
-					$description[] =
-						[
-							"type" => "text",
-							"value" => $json["Abstract"]
-						];
+					$description = $this->parse_rich_text($json["Abstract"]);
+				}
+				
+				if(
+					!isset($json["Image"]) ||
+					$json["Image"] == "" ||
+					$json["Image"] === null ||
+					$json["Image"] == "https://duckduckgo.com/i/"
+				){
+					
+					$image = null;
+				}else{
+					
+					if(
+						preg_match(
+							'/^https?:\/\//',
+							$json["Image"]
+						)
+					){
+						
+						$image = $json["Image"];
+					}else{
+						
+						$image = "https://duckduckgo.com" . $json["Image"];
+					}
 				}
 				
 				$out["answer"][] = [
 					"title" => $json["Heading"],
 					"description" => $description,
 					"url" => $json["AbstractURL"],
-					"thumb" =>
-						(!isset($json["Image"]) || $json["Image"] == "" || $json["Image"] === null) ?
-						null : "https://duckduckgo.com" . $json["Image"],
+					"thumb" => $image,
 					"table" => $table,
 					"sublink" => $sublinks
 				];
@@ -1382,146 +1400,7 @@ class ddg{
 									isset($answer["Abstract"])
 								){
 									
-									// got some data
-									$description = [];
-									$html = &$answer["Abstract"];
-									
-									// pre-process the html, remove useless elements
-									$html =
-										strip_tags(
-											$html,
-											[
-												"h1", "h2", "h3", "h4", "h5", "h6", "h7",
-												"pre", "code"
-											]
-										);
-									
-									$html =
-										preg_replace(
-											'/<(\/?)pre *[^>]*>\s*<\/?code *[^>]*>/i',
-											'<$1pre>',
-											$html
-										);
-									
-									$this->fuckhtml->load($html);
-									
-									$tags =
-										$this->fuckhtml
-										->getElementsByTagName(
-											"*"
-										);
-									
-									if(count($tags) === 0){
-										
-										$description = [
-											"type" => "text",
-											"value" =>
-												trim(
-													$this->fuckhtml
-													->getTextContent(
-														substr(
-															$html,
-															$start,
-															$tag["startPos"] - $start
-														),
-														true,
-														false
-													)
-												)
-										];
-									}else{
-										
-										$start = 0;
-										$was_code_block = true;
-										foreach($tags as $tag){
-											
-											$text =
-												$this->fuckhtml
-												->getTextContent(
-													substr(
-														$html,
-														$start,
-														$tag["startPos"] - $start
-													),
-													true,
-													false
-												);
-											
-											if($was_code_block){
-												
-												$text = ltrim($text);
-												$was_code_block = false;
-											}
-											
-											$description[] = [
-												"type" => "text",
-												"value" => $text
-											];
-											
-											switch($tag["tagName"]){
-												
-												case "pre":
-													$append = "code";
-													$was_code_block = true;
-													$c = count($description) - 1;
-													$description[$c]["value"] =
-														rtrim($description[$c]["value"]);
-													break;
-												
-												case "code":
-													$append = "inline_code";
-													$c = count($description) - 1;
-													$description[$c]["value"] =
-														rtrim($description[$c]["value"]) . " ";
-													break;
-												
-												case "h1":
-												case "h2":
-												case "h3":
-												case "h4":
-												case "h5":
-												case "h6":
-												case "h7":
-													$append = "title";
-													$c = count($description) - 1;
-													$description[$c]["value"] =
-														rtrim($description[$c]["value"]);
-													break;
-											}
-											
-											$description[] = [
-												"type" => $append,
-												"value" =>
-													trim(
-														$this->fuckhtml
-														->getTextContent(
-															$tag,
-															true,
-															false
-														)
-													)
-											];
-											
-											$start = $tag["endPos"];
-										}
-										
-										// shit out remainder
-										$description[] = [
-											"type" => "text",
-											"value" =>
-												trim(
-													$this->fuckhtml
-													->getTextContent(
-														substr(
-															$html,
-															$start
-														),
-														true,
-														false
-													)
-												)
-										];
-									}
+									$description = $this->parse_rich_text($answer["Abstract"]);
 									
 									$out["answer"][] = [
 										"title" => $title,
@@ -2062,6 +1941,150 @@ class ddg{
 		}
 		
 		return $out;
+	}
+	
+	private function parse_rich_text($html){
+		
+		$description = [];
+		
+		// pre-process the html, remove useless elements
+		$html =
+			strip_tags(
+				$html,
+				[
+					"h1", "h2", "h3", "h4", "h5", "h6", "h7",
+					"pre", "code"
+				]
+			);
+		
+		$html =
+			preg_replace(
+				'/<(\/?)pre *[^>]*>\s*<\/?code *[^>]*>/i',
+				'<$1pre>',
+				$html
+			);
+		
+		$this->fuckhtml->load($html);
+		
+		$tags =
+			$this->fuckhtml
+			->getElementsByTagName(
+				"*"
+			);
+		
+		if(count($tags) === 0){
+			
+			$description = [
+				"type" => "text",
+				"value" =>
+					trim(
+						$this->fuckhtml
+						->getTextContent(
+							substr(
+								$html,
+								$start,
+								$tag["startPos"] - $start
+							),
+							true,
+							false
+						)
+					)
+			];
+		}else{
+			
+			$start = 0;
+			$was_code_block = true;
+			foreach($tags as $tag){
+				
+				$text =
+					$this->fuckhtml
+					->getTextContent(
+						substr(
+							$html,
+							$start,
+							$tag["startPos"] - $start
+						),
+						true,
+						false
+					);
+				
+				if($was_code_block){
+					
+					$text = ltrim($text);
+					$was_code_block = false;
+				}
+				
+				$description[] = [
+					"type" => "text",
+					"value" => $text
+				];
+				
+				switch($tag["tagName"]){
+					
+					case "pre":
+						$append = "code";
+						$was_code_block = true;
+						$c = count($description) - 1;
+						$description[$c]["value"] =
+							rtrim($description[$c]["value"]);
+						break;
+					
+					case "code":
+						$append = "inline_code";
+						$c = count($description) - 1;
+						$description[$c]["value"] =
+							rtrim($description[$c]["value"]) . " ";
+						break;
+					
+					case "h1":
+					case "h2":
+					case "h3":
+					case "h4":
+					case "h5":
+					case "h6":
+					case "h7":
+						$append = "title";
+						$c = count($description) - 1;
+						$description[$c]["value"] =
+							rtrim($description[$c]["value"]);
+						break;
+				}
+				
+				$description[] = [
+					"type" => $append,
+					"value" =>
+						trim(
+							$this->fuckhtml
+							->getTextContent(
+								$tag,
+								true,
+								false
+							)
+						)
+				];
+				
+				$start = $tag["endPos"];
+			}
+			
+			// shit out remainder
+			$description[] = [
+				"type" => "text",
+				"value" =>
+					trim(
+						$this->fuckhtml
+						->getTextContent(
+							substr(
+								$html,
+								$start
+							),
+							true,
+							false
+						)
+					)
+			];
+		}
+		
+		return $description;
 	}
 	
 	private function titledots($title){
