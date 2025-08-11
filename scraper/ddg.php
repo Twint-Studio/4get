@@ -1072,11 +1072,11 @@ class ddg{
 		}
 		
 		//
-		// Get wordnik definition
+		// Parse additional data endpoints
 		//
 		//nrj('/js/spice/dictionary/definition/create', null, null, null, null, 'dictionary_definition');
 		
-		preg_match(
+		preg_match_all(
 			'/nrj\(\s*\'([^\']+)\'/',
 			$js,
 			$nrj
@@ -1084,234 +1084,460 @@ class ddg{
 		
 		if(isset($nrj[1])){
 			
-			$nrj = $nrj[1];
-			
-			preg_match(
-				'/\/js\/spice\/dictionary\/definition\/([^\/]+)/',
-				$nrj,
-				$word
-			);
-			
-			if(isset($word[1])){
+			foreach($nrj[1] as $potential_endpoint){
 				
-				$word = $word[1];
+				//
+				// Probe for wordnik definition
+				//
+				preg_match(
+					'/\/js\/spice\/dictionary\/definition\/([^\/]+)/',
+					$potential_endpoint,
+					$word
+				);
 				
-				// found wordnik definition & word
-				try{
-					$nik =
-						$this->get(
-							$proxy,
-							"https://duckduckgo.com/js/spice/dictionary/definition/" . $word,
-							[],
-							ddg::req_xhr
+				if(isset($word[1])){
+					
+					$word = $word[1];
+					
+					// found wordnik definition & word
+					try{
+						$nik =
+							$this->get(
+								$proxy,
+								"https://duckduckgo.com/js/spice/dictionary/definition/" . $word,
+								[],
+								ddg::req_xhr
+							);
+						
+					}catch(Exception $e){
+						
+						// fail gracefully
+						return $out;
+					}
+					
+					// remove javascript
+					$js_tmp =
+						preg_split(
+							'/ddg_spice_dictionary_definition\(\s*/',
+							$nik,
+							2
 						);
 					
-				}catch(Exception $e){
-					
-					// fail gracefully
-					return $out;
-				}
-				
-				// remove javascript
-				$js_tmp =
-					preg_split(
-						'/ddg_spice_dictionary_definition\(\s*/',
-						$nik,
-						2
-					);
-				
-				if(count($js_tmp) > 1){
-					
-					$nik =
-						json_decode(
-							$this->fuckhtml
-							->extract_json(
-								$js_tmp[1]
-							),
-							true
-						);
-				}
-				
-				if($nik === null){
-					
-					return $out;
-				}
-				
-				$answer_cat = [];
-				$answer = [];
-				
-				foreach($nik as $snippet){
-					
-					if(!isset($snippet["partOfSpeech"])){ continue; }
-					
-					$push = [];
-					
-					// add text snippet
-					if(isset($snippet["text"])){
+					if(count($js_tmp) > 1){
 						
-						$push[] = [
-							"type" => "text",
-							"value" =>
+						$nik =
+							json_decode(
 								$this->fuckhtml
-								->getTextContent(
-									$snippet["text"]
-								)
-						];
-					}
-					
-					// add example uses
-					if(isset($snippet["exampleUses"])){
-						
-						foreach($snippet["exampleUses"] as $example){
-							
-							$push[] = [
-								"type" => "quote",
-								"value" => "\"" .
-									$this->fuckhtml
-									->getTextContent(
-										$example["text"]
-									) . "\""
-							];
-						}
-					}
-					
-					// add citations
-					if(isset($snippet["citations"])){
-						
-						foreach($snippet["citations"] as $citation){
-							
-							if(!isset($citation["cite"])){ continue; }
-							
-							$text =
-								$this->fuckhtml
-								->getTextContent(
-									$citation["cite"]
-								);
-							
-							if(isset($citation["source"])){
-								
-								$text .=
-									" - " .
-									$this->fuckhtml
-									->getTextContent(
-										$citation["source"]
-									);
-							}
-							
-							$push[] = [
-								"type" => "quote",
-								"value" => $text
-							];
-						}
-					}
-					
-					// add related words
-					if(isset($snippet["relatedWords"])){
-						
-						$relations = [];
-						
-						foreach($snippet["relatedWords"] as $related){
-							
-							$words = [];
-							foreach($related["words"] as $wrd){
-								
-								$words[] =
-									$this->fuckhtml
-									->getTextContent(
-										$wrd
-									);
-							}
-							
-							if(
-								count($words) !== 0 &&
-								isset($related["relationshipType"])
-							){
-								
-								$relations[ucfirst($related["relationshipType"]) . "s"] =
-									implode(", ", $words);
-							}
-						}
-						
-						foreach($relations as $relation_title => $relation_content){
-							
-							$push[] = [
-								"type" => "quote",
-								"value" => $relation_title . ": " . $relation_content
-							];
-						}
-					}
-					
-					
-					if(count($push) !== 0){
-						
-						// push data to answer_cat
-						if(!isset($answer_cat[$snippet["partOfSpeech"]])){
-							
-							$answer_cat[$snippet["partOfSpeech"]] = [];
-						}
-						
-						$answer_cat[$snippet["partOfSpeech"]] =
-							array_merge(
-								$answer_cat[$snippet["partOfSpeech"]],
-								$push
+								->extract_json(
+									$js_tmp[1]
+								),
+								true
 							);
 					}
-				}
-				
-				foreach($answer_cat as $answer_title => $answer_content){
 					
-					$i = 0;
-					$answer[] = [
-						"type" => "title",
-						"value" => $answer_title
-					];
-					
-					$old_type = $answer[count($answer) - 1]["type"];
-					
-					foreach($answer_content as $ans){
+					if($nik === null){
 						
-						if(
-							$ans["type"] == "text" &&
-							$old_type == "text"
-						){
+						return $out;
+					}
+					
+					$answer_cat = [];
+					$answer = [];
+					
+					foreach($nik as $snippet){
+						
+						if(!isset($snippet["partOfSpeech"])){ continue; }
+						
+						$push = [];
+						
+						// add text snippet
+						if(isset($snippet["text"])){
 							
-							$i++;
-							$c = count($answer) - 1;
-							
-							// append text to existing textfield
-							$answer[$c] = [
+							$push[] = [
 								"type" => "text",
-								"value" => $answer[$c]["value"] . "\n" . $i . ". " . $ans["value"]
+								"value" =>
+									$this->fuckhtml
+									->getTextContent(
+										$snippet["text"]
+									)
 							];
-							
-						}elseif($ans["type"] == "text"){
-							
-							$i++;
-							$answer[] = [
-								"type" => "text",
-								"value" => $i . ". " . $ans["value"]
-							];
-						}else{
-							
-							// append normally
-							$answer[] = $ans;
 						}
 						
-						$old_type = $ans["type"];
+						// add example uses
+						if(isset($snippet["exampleUses"])){
+							
+							foreach($snippet["exampleUses"] as $example){
+								
+								$push[] = [
+									"type" => "quote",
+									"value" => "\"" .
+										$this->fuckhtml
+										->getTextContent(
+											$example["text"]
+										) . "\""
+								];
+							}
+						}
+						
+						// add citations
+						if(isset($snippet["citations"])){
+							
+							foreach($snippet["citations"] as $citation){
+								
+								if(!isset($citation["cite"])){ continue; }
+								
+								$text =
+									$this->fuckhtml
+									->getTextContent(
+										$citation["cite"]
+									);
+								
+								if(isset($citation["source"])){
+									
+									$text .=
+										" - " .
+										$this->fuckhtml
+										->getTextContent(
+											$citation["source"]
+										);
+								}
+								
+								$push[] = [
+									"type" => "quote",
+									"value" => $text
+								];
+							}
+						}
+						
+						// add related words
+						if(isset($snippet["relatedWords"])){
+							
+							$relations = [];
+							
+							foreach($snippet["relatedWords"] as $related){
+								
+								$words = [];
+								foreach($related["words"] as $wrd){
+									
+									$words[] =
+										$this->fuckhtml
+										->getTextContent(
+											$wrd
+										);
+								}
+								
+								if(
+									count($words) !== 0 &&
+									isset($related["relationshipType"])
+								){
+									
+									$relations[ucfirst($related["relationshipType"]) . "s"] =
+										implode(", ", $words);
+								}
+							}
+							
+							foreach($relations as $relation_title => $relation_content){
+								
+								$push[] = [
+									"type" => "quote",
+									"value" => $relation_title . ": " . $relation_content
+								];
+							}
+						}
+						
+						
+						if(count($push) !== 0){
+							
+							// push data to answer_cat
+							if(!isset($answer_cat[$snippet["partOfSpeech"]])){
+								
+								$answer_cat[$snippet["partOfSpeech"]] = [];
+							}
+							
+							$answer_cat[$snippet["partOfSpeech"]] =
+								array_merge(
+									$answer_cat[$snippet["partOfSpeech"]],
+									$push
+								);
+						}
+					}
+					
+					foreach($answer_cat as $answer_title => $answer_content){
+						
+						$i = 0;
+						$answer[] = [
+							"type" => "title",
+							"value" => $answer_title
+						];
+						
+						$old_type = $answer[count($answer) - 1]["type"];
+						
+						foreach($answer_content as $ans){
+							
+							if(
+								$ans["type"] == "text" &&
+								$old_type == "text"
+							){
+								
+								$i++;
+								$c = count($answer) - 1;
+								
+								// append text to existing textfield
+								$answer[$c] = [
+									"type" => "text",
+									"value" => $answer[$c]["value"] . "\n" . $i . ". " . $ans["value"]
+								];
+								
+							}elseif($ans["type"] == "text"){
+								
+								$i++;
+								$answer[] = [
+									"type" => "text",
+									"value" => $i . ". " . $ans["value"]
+								];
+							}else{
+								
+								// append normally
+								$answer[] = $ans;
+							}
+							
+							$old_type = $ans["type"];
+						}
+					}
+					
+					// yeah.. sometimes duckduckgo doesnt give us a definition back
+					if(count($answer) !== 0){
+						
+						$out["answer"][] = [
+							"title" => ucfirst($word),
+							"description" => $answer,
+							"url" => "https://www.wordnik.com/words/" . $word,
+							"thumb" => null,
+							"table" => [],
+							"sublink" => []
+						];
 					}
 				}
 				
-				// yeah.. sometimes duckduckgo doesnt give us a definition back
-				if(count($answer) !== 0){
+				//
+				// Parse stackoverflow answer
+				//
+				//$json = 'DDG.duckbar.add_array([{"data":[{"Abstract":"<p> If you are interested in finding out whether a variable has been declared regardless of its value, then using the <code>in</code> operator is the safest way to go. Consider this example: </p>\n\n<pre><code>// global scope\nvar theFu; // theFu has been declared, but its value is undefined\ntypeof theFu; // &quot;undefined&quot;\n</code></pre>\n\n<p> But this may not be the intended result for some cases, since the variable or property was declared but just not initialized. Use the <code>in</code> operator for a more robust <b>check</b>. </p>\n\n<pre><code>&quot;theFu&quot; in window; // true\n&quot;theFoo&quot; in window; // false\n</code></pre>\n\n<p> If you are interested in knowing whether the variable hasn\'t been declared or has the value <code>undefined</code>, then use the <code>typeof</code> operator, which is guaranteed to return a string: </p>\n\n<pre><code>if (typeof myVar !== &#x27;undefined&#x27;)\n</code></pre>\n\n<p> Direct comparisons against <code>undefined</code> are troublesome as <code>undefined</code> can be overwritten.  </p>\n\n<pre><code>window.undefined = &quot;foo&quot;;\n&quot;foo&quot; == undefined // true\n</code></pre>\n\n<p> As @CMS pointed out, this has been patched in ECMAScript 5th ed., and <code>undefined</code> is non-writable. </p>\n\n<p> <code>if (window.myVar)</code> will also include these falsy values, so it\'s not very robust: </p>\n\n<pre>\nfalse\n0\n\"\"\nNaN\nnull\nundefined\n</pre>\n\n<p> Thanks to @CMS for pointing out that your third case - <code>if (myVariable)</code> can also throw an error in two cases. The first is when the variable hasn\'t been defined which throws a <code>ReferenceError</code>.  </p>\n\n<pre><code>// abc was never declared.\nif (abc) {\n    // ReferenceError: abc is not defined\n} \n</code></pre>\n\n<p> The other case is when the variable has been defined, but has a getter function which throws an error when invoked. For example, </p>\n\n<pre><code>// or it&#x27;s a property that can throw an error\nObject.defineProperty(window, &quot;myVariable&quot;, { \n    get: function() { throw new Error(&quot;W00t?&quot;); }, \n    set: undefined \n});\nif (myVariable) {\n    // Error: W00t?\n}\n</code></pre>\n <p>--<a href=\"http://stackoverflow.com/users/165737/ddg\">Anurag</a></p>","AbstractSource":"Stack Overflow","AbstractURL":"http://stackoverflow.com/questions/3390396/ddg#3390426","Heading":"How can I check for undefined in JavaScript","data":[{"accepted":1,"creation_date":"2010-08-02T17:58:18.717","parent_score":3053,"post_links":{"10098816":1,"14572415":1,"1485840":3,"15722425":2,"16142957":1,"17082855":2,"17101585":1,"17297203":1,"18475309":1,"1984721":2,"20502070":1,"20529817":1,"20680223":1,"20824716":1,"20869585":1,"20891039":2,"21188382":2,"21805507":2,"21871775":1,"22481003":2,"22992780":1,"23303729":1,"23481605":1,"24640628":1,"24978423":1,"25093101":1,"26120577":1,"2631001":1,"26487804":1,"26816006":1,"27509":3,"2778901":1,"28535341":1,"29235071":1,"29274374":1,"2985771":3,"30212179":1,"32295428":1,"36038043":1,"37297791":2,"37980559":1,"37981604":1,"38825185":1,"3985661":1,"42025958":1,"42326845":1,"44039387":2,"44309845":1,"44451111":1,"45623767":1,"46349615":1,"46670713":1,"47061118":1,"47765100":1,"48791268":1,"49743198":1,"50672434":1,"51109296":1,"51844419":2,"52102855":1,"53087022":1,"53294206":1,"53309649":1,"55790409":2,"55851196":1,"57923236":2,"5879319":1,"59069809":1,"59573769":1,"59605060":2,"60498918":1,"60862972":2,"61417067":1,"63456991":1,"68305469":1,"68327992":1,"68941436":1,"71710480":1,"71734417":2,"75102037":2,"858181":1,"8675839":1,"9225436":1,"9817488":1},"tags":["|javascript|undefined|"]}],"meta":{"attribution":null,"blockgroup":null,"created_date":"2016-08-24","description":"Programming answers","designer":null,"dev_date":"2015-04-14","dev_milestone":"live","developer":[{"name":"zachthompson","type":"github","url":"https://github.com/zachthompson"}],"example_query":"python merge dicts","id":"stack_overflow","idField":"url","is_stackexchange":1,"js_callback_name":"stack_overflow","live_date":"2015-04-14","maintainer":{"github":"ddg"},"name":"Stack Overflow","perl_module":"DDG::Longtail::StackOverflow","producer":"jdorw","production_state":"offline","repo":"longtail","signal_from":"stack_overflow","src_domain":"stackoverflow.com","src_id":null,"src_name":"Stack Overflow","src_url":" ","status":"live","tab":" ","topic":["programming"],"unsafe":0},"signal":"low","title":"How can I check for undefined in JavaScript"}],"duckbar_topic":"qa","from":"nlp_qa","meta":{"attribution":null,"blockgroup":null,"created_date":"2016-08-24","description":"Programming answers","designer":null,"dev_date":"2015-04-14","dev_milestone":"live","developer":[{"name":"zachthompson","type":"github","url":"https://github.com/zachthompson"}],"example_query":"python merge dicts","id":"stack_overflow","idField":"url","is_stackexchange":1,"js_callback_name":"stack_overflow","live_date":"2015-04-14","maintainer":{"github":"ddg"},"name":"Stack Overflow","perl_module":"DDG::Longtail::StackOverflow","producer":"jdorw","production_state":"offline","repo":"longtail","signal_from":"stack_overflow","src_domain":"stackoverflow.com","src_id":null,"src_name":"Stack Overflow","src_url":" ","status":"live","tab":" ","topic":["programming"],"unsafe":0},"signal":"low","templates":{"detail":"nlp_detail","item":"nlp_item","item_detail":"qa_detail","wrap_detail":"base_detail"}}]);DDH.stack_overflow=DDH.stack_overflow||{};DDH.stack_overflow.meta={"attribution":null,"blockgroup":null,"created_date":"2016-08-24","description":"Programming answers","designer":null,"dev_date":"2015-04-14","dev_milestone":"live","developer":[{"name":"zachthompson","type":"github","url":"https://github.com/zachthompson"}],"example_query":"python merge dicts","id":"stack_overflow","idField":"url","is_stackexchange":1,"js_callback_name":"stack_overflow","live_date":"2015-04-14","maintainer":{"github":"ddg"},"name":"Stack Overflow","perl_module":"DDG::Longtail::StackOverflow","producer":"jdorw","production_state":"offline","repo":"longtail","signal_from":"stack_overflow","src_domain":"stackoverflow.com","src_id":null,"src_name":"Stack Overflow","src_url":" ","status":"live","tab":" ","topic":["programming"],"unsafe":0};';
+				//$json = 'DDG.duckbar.add_array([{"data":[{"Abstract":"<p> You can use the <code>convert</code> <b>command</b>: </p>\n<pre>\nconvert input.jpg -rotate <i>&lt;angle in degrees&gt;</i> out.jpg\n</pre>\n<p> To <b>rotate</b> 90 degrees clockwise: </p>\n<pre><code>convert input.jpg -rotate 90 out.jpg\n</code></pre>\n<p> To save the file with the same name: </p>\n<pre><code>convert file.jpg -rotate 90 file.jpg\n</code></pre>\n<p> To <b>rotate</b> all files: </p>\n<pre><code>for photo in *.jpg ; do convert $photo -rotate 90 $photo ; done\n</code></pre>\n<hr />\n<p> Alternatively, you can also use the <a href=\"https://imagemagick.org/script/mogrify.php\" rel=\"noreferrer\"><code>mogrify</code></a> <b>command</b> <b>line</b> tools (<b>the</b> best tool) recommended by <a href=\"https://unix.stackexchange.com/users/22142/don-crissti\">@don-crissti</a><b>:</b> </p>\n<pre><code>mogrify -rotate 90 *.jpg\n</code></pre>\n <p>--<a href=\"http://unix.stackexchange.com/users/153195/ddg\">GAD3R</a><b></p></b>","AbstractSource":"Unix & Linux Stack Exchange","AbstractURL":"http://unix.stackexchange.com/questions/365592/ddg#365595","Heading":"How to rotate a set of pictures from the command line","data":[{"accepted":1,"creation_date":"2017-05-17T11:39:04.000","parent_score":62,"post_links":{"395845":2},"tags":["|command-line|imagemagick|gimp|"]}],"meta":{"attribution":null,"blockgroup":null,"created_date":null,"description":"Question and answer site for users of Linux, FreeBSD and other Un*x-like operating systems","designer":null,"dev_date":"2015-04-14","dev_milestone":"live","developer":[{"name":"DDG Team","type":"ddg","url":"http://www.duckduckhack.com"}],"example_query":"use DD to migrate data from an old drive to a new drive","id":"unix","idField":"url","is_stackexchange":1,"js_callback_name":"unix","live_date":"2015-04-14","maintainer":{"github":"duckduckgo"},"name":"Unix & Linux Stack Exchange","perl_module":"DDG::Longtail::Unix","producer":null,"production_state":"offline","repo":"longtail","signal_from":"unix","src_domain":"unix.stackexchange.com","src_id":null,"src_name":"Unix StackExchange","src_url":"unix.stackexchange.com","status":"live","tab":null,"topic":["sysadmin"],"unsafe":0},"signal":"low","title":"How to rotate a set of pictures from the command line"}],"duckbar_topic":"qa","from":"nlp_qa","meta":{"attribution":null,"blockgroup":null,"created_date":null,"description":"Question and answer site for users of Linux, FreeBSD and other Un*x-like operating systems","designer":null,"dev_date":"2015-04-14","dev_milestone":"live","developer":[{"name":"DDG Team","type":"ddg","url":"http://www.duckduckhack.com"}],"example_query":"use DD to migrate data from an old drive to a new drive","id":"unix","idField":"url","is_stackexchange":1,"js_callback_name":"unix","live_date":"2015-04-14","maintainer":{"github":"duckduckgo"},"name":"Unix & Linux Stack Exchange","perl_module":"DDG::Longtail::Unix","producer":null,"production_state":"offline","repo":"longtail","signal_from":"unix","src_domain":"unix.stackexchange.com","src_id":null,"src_name":"Unix StackExchange","src_url":"unix.stackexchange.com","status":"live","tab":null,"topic":["sysadmin"],"unsafe":0},"signal":"low","templates":{"detail":"nlp_detail","item":"nlp_item","item_detail":"qa_detail","wrap_detail":"base_detail"}}]);DDH.unix=DDH.unix||{};DDH.unix.meta={"attribution":null,"blockgroup":null,"created_date":null,"description":"Question and answer site for users of Linux, FreeBSD and other Un*x-like operating systems","designer":null,"dev_date":"2015-04-14","dev_milestone":"live","developer":[{"name":"DDG Team","type":"ddg","url":"http://www.duckduckhack.com"}],"example_query":"use DD to migrate data from an old drive to a new drive","id":"unix","idField":"url","is_stackexchange":1,"js_callback_name":"unix","live_date":"2015-04-14","maintainer":{"github":"duckduckgo"},"name":"Unix & Linux Stack Exchange","perl_module":"DDG::Longtail::Unix","producer":null,"production_state":"offline","repo":"longtail","signal_from":"unix","src_domain":"unix.stackexchange.com","src_id":null,"src_name":"Unix StackExchange","src_url":"unix.stackexchange.com","status":"live","tab":null,"topic":["sysadmin"],"unsafe":0};';
+				
+				if(
+					preg_match(
+						'/^\/a\.js.*src_id=stack_overflow/',
+						$potential_endpoint
+					)
+				){
 					
-					$out["answer"][] = [
-						"title" => ucfirst($word),
-						"description" => $answer,
-						"url" => "https://www.wordnik.com/words/" . $word,
-						"thumb" => null,
-						"table" => [],
-						"sublink" => []
-					];
+					// found stackoverflow answer
+					try{
+						$json =
+							$this->get(
+								$proxy,
+								"https://duckduckgo.com" . $potential_endpoint,
+								[],
+								ddg::req_xhr
+							);
+						
+					}catch(Exception $e){
+						
+						// fail gracefully
+						return $out;
+					}
+					
+					$json = explode("DDG.duckbar.add_array(", $json, 2);
+					
+					if(count($json) === 2){
+						
+						$json =
+							json_decode(
+								$this->fuckhtml
+								->extract_json(
+									$json[1]
+								),
+								true
+							);
+						
+						if(
+							$json !== null &&
+							isset($json[0]["data"])
+						){
+							
+							$json = $json[0]["data"];
+							
+							foreach($json as $answer){
+								
+								if(isset($answer["Heading"])){
+									
+									$title = $answer["Heading"];
+								}elseif(isset($answer["title"])){
+									
+									$title = $answer["title"];
+								}else{
+									
+									$title = null;
+								}
+								
+								if(
+									$title !== null &&
+									isset($answer["Abstract"])
+								){
+									
+									// got some data
+									$description = [];
+									$html = &$answer["Abstract"];
+									
+									// pre-process the html, remove useless elements
+									$html =
+										strip_tags(
+											$html,
+											[
+												"h1", "h2", "h3", "h4", "h5", "h6", "h7",
+												"pre", "code"
+											]
+										);
+									
+									$html =
+										preg_replace(
+											'/<(\/?)pre *[^>]*>\s*<\/?code *[^>]*>/i',
+											'<$1pre>',
+											$html
+										);
+									
+									$this->fuckhtml->load($html);
+									
+									$tags =
+										$this->fuckhtml
+										->getElementsByTagName(
+											"*"
+										);
+									
+									if(count($tags) === 0){
+										
+										$description = [
+											"type" => "text",
+											"value" =>
+												trim(
+													$this->fuckhtml
+													->getTextContent(
+														substr(
+															$html,
+															$start,
+															$tag["startPos"] - $start
+														),
+														true,
+														false
+													)
+												)
+										];
+									}else{
+										
+										$start = 0;
+										$was_code_block = true;
+										foreach($tags as $tag){
+											
+											$text =
+												$this->fuckhtml
+												->getTextContent(
+													substr(
+														$html,
+														$start,
+														$tag["startPos"] - $start
+													),
+													true,
+													false
+												);
+											
+											if($was_code_block){
+												
+												$text = ltrim($text);
+												$was_code_block = false;
+											}
+											
+											$description[] = [
+												"type" => "text",
+												"value" => $text
+											];
+											
+											switch($tag["tagName"]){
+												
+												case "pre":
+													$append = "code";
+													$was_code_block = true;
+													$c = count($description) - 1;
+													$description[$c]["value"] =
+														rtrim($description[$c]["value"]);
+													break;
+												
+												case "code":
+													$append = "inline_code";
+													$c = count($description) - 1;
+													$description[$c]["value"] =
+														rtrim($description[$c]["value"]) . " ";
+													break;
+												
+												case "h1":
+												case "h2":
+												case "h3":
+												case "h4":
+												case "h5":
+												case "h6":
+												case "h7":
+													$append = "title";
+													$c = count($description) - 1;
+													$description[$c]["value"] =
+														rtrim($description[$c]["value"]);
+													break;
+											}
+											
+											$description[] = [
+												"type" => $append,
+												"value" =>
+													trim(
+														$this->fuckhtml
+														->getTextContent(
+															$tag,
+															true,
+															false
+														)
+													)
+											];
+											
+											$start = $tag["endPos"];
+										}
+										
+										// shit out remainder
+										$description[] = [
+											"type" => "text",
+											"value" =>
+												trim(
+													$this->fuckhtml
+													->getTextContent(
+														substr(
+															$html,
+															$start
+														),
+														true,
+														false
+													)
+												)
+										];
+									}
+									
+									$out["answer"][] = [
+										"title" => $title,
+										"description" => $description,
+										"url" => $answer["AbstractURL"],
+										"thumb" => null,
+										"table" => [],
+										"sublink" => []
+									];
+								}
+							}
+						}
+					}
 				}
 			}
 		}
