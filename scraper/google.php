@@ -1804,11 +1804,15 @@ class google{
 								$this->fuckhtml
 								->getTextContent(
 									$fact
-								)
+								),
+								2
 							);
 						
-						$table[trim(preg_replace('/\s+/', " ", $fact[0]))] =
-							trim(preg_replace('/\s+/', " ", $fact[1]));
+						if(count($fact) === 2){
+							
+							$table[trim(preg_replace('/\s+/', " ", $fact[0]))] =
+								trim(preg_replace('/\s+/', " ", $fact[1]));
+						}
 					}
 					
 					$this->fuckhtml->load($box);
