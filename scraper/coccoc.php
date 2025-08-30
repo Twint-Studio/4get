@@ -165,6 +165,14 @@ class coccoc{
 			throw new Exception("Failed to decode JSON");
 		}
 		
+		if(
+			isset($html["captcha"]) &&
+			(int)$html["captcha"] === 1
+		){
+			
+			throw new Exception("Coc Coc returned a Captcha");
+		}
+		
 		if(!isset($html["search"]["search_results"])){
 			
 			throw new Exception("Coc Coc did not return a search_results object");
