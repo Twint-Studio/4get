@@ -705,7 +705,7 @@ class google{
 	}
 	
 	
-	private function unshit_thumb($url){
+	private function unshit_thumb($url, $get_bigger_res = false){
 		// https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQINE2vbnNLHXqoZr3RVsaEJFyOsj1_BiBnJch-e1nyz3oia7Aj5xVj
 		// https://i.ytimg.com/vi/PZVIyA5ER3Y/mqdefault.jpg?sqp=-oaymwEFCJQBEFM&rs=AMzJL3nXeaCpdIar-ltNwl82Y82cIJfphA
 		
@@ -714,7 +714,7 @@ class google{
 		if(
 			isset($parts["host"]) &&
 			preg_match(
-				'/tbn.*\.gstatic\.com/',
+				'/(?:encrypted-)?tbn.*\.gstatic\.com/',
 				$parts["host"]
 			)
 		){
@@ -723,7 +723,26 @@ class google{
 			
 			if(isset($params["q"])){
 				
-				return "https://" . $parts["host"] . "/images?q=" . $params["q"];
+				if($get_bigger_res){
+					
+					// this method doesnt always work, but does work for wiki thumbnails
+					return
+						"https://" . $parts["host"] . "/images?q=tbn:" .
+						$this->base64url_encode(
+							substr(
+								$this->base64url_decode(
+									explode(
+										":",
+										$params["q"])[1]
+									),
+								0,
+								29
+							)
+						);
+				}else{
+					
+					return "https://" . $parts["host"] . "/images?q=" . $params["q"];
+				}
 			}
 		}
 		
@@ -1591,9 +1610,12 @@ class google{
 				if(count($img) !== 0){
 					
 					$thumb =
-						$this->fuckhtml
-						->getTextContent(
-							$img[0]["attributes"]["src"]
+						$this->unshit_thumb(
+							$this->fuckhtml
+							->getTextContent(
+								$img[0]["attributes"]["src"]
+							),
+							true
 						);
 				}
 				
@@ -2974,6 +2996,20 @@ class google{
 		$time = $time + (int)$parts[0];
 		
 		return $time;
+	}
+	
+	function base64url_decode($data){
+		
+		$b64 = strtr($data, "-_", "+/");
+		$pad = strlen($b64) % 4;
+		if ($pad) $b64 .= str_repeat("=", 4 - $pad);
+		
+		return base64_decode($b64);
+	}
+
+	function base64url_encode($data){
+		
+		return rtrim(strtr(base64_encode($data), "+/", "-_"), "=");
 	}
 	
 	private function detect_sorry(){
