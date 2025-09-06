@@ -1,4 +1,6 @@
 <?php
+// greppr dev probably monitors 4get code, lol
+// hello greppr dude, add an API you moron
 
 class greppr{
 	
@@ -16,13 +18,21 @@ class greppr{
 		return [];
 	}
 	
-	private function get($proxy, $url, $get = [], $cookie = false, $post){
+	private function get($proxy, $url, $get = [], $cookies = [], $post = false){
 		
 		$curlproc = curl_init();
 		
 		curl_setopt($curlproc, CURLOPT_URL, $url);
 		
 		curl_setopt($curlproc, CURLOPT_ENCODING, ""); // default encoding
+		
+		$cookie = [];
+		foreach($cookies as $k => $v){
+			
+			$cookie[] = "{$k}={$v}";
+		}
+		
+		$cookie = implode("; ", $cookie);
 		
 		if($post === false){
 						
@@ -31,7 +41,7 @@ class greppr{
 				$url .= "?" . $get;
 			}
 			
-			if($cookie === false){
+			if($cookie == ""){
 				
 				curl_setopt($curlproc, CURLOPT_HTTPHEADER,
 					["User-Agent: " . config::USER_AGENT,
@@ -57,7 +67,7 @@ class greppr{
 					"Sec-GPC: 1",
 					"Connection: keep-alive",
 					"Referer: https://greppr.org/search",
-					"Cookie: PHPSESSID=$cookie",
+					"Cookie: {$cookie}",
 					"Upgrade-Insecure-Requests: 1",
 					"Sec-Fetch-Dest: document",
 					"Sec-Fetch-Mode: navigate",
@@ -85,7 +95,7 @@ class greppr{
 				"Sec-GPC: 1",
 				"Connection: keep-alive",
 				"Referer: https://greppr.org/",
-				"Cookie: PHPSESSID=$cookie",
+				"Cookie: {$cookie}",
 				"Upgrade-Insecure-Requests: 1",
 				"Sec-Fetch-Dest: document",
 				"Sec-Fetch-Mode: navigate",
@@ -119,7 +129,7 @@ class greppr{
 					return $len;
 				}
 				
-				$headers[strtolower(trim($header[0]))] = trim($header[1]);
+				$headers[strtolower(trim($header[0]))][] = trim($header[1]);
 
 				return $len;
 			}
@@ -157,7 +167,7 @@ class greppr{
 					$proxy,
 					"https://greppr.org" . $tokens["get"],
 					[],
-					$tokens["cookie"],
+					$tokens["cookies"],
 					false
 				);
 			}catch(Exception $error){
@@ -185,12 +195,12 @@ class greppr{
 						$proxy,
 						"https://greppr.org",
 						[],
-						false,
+						[],
 						false
 					);
 			}catch(Exception $error){
 				
-				throw new Exception("Failed to fetch search tokens");
+				throw new Exception("Failed to fetch homepage");
 			}
 			
 			//
@@ -198,7 +208,11 @@ class greppr{
 			//
 			$this->fuckhtml->load($html["data"]);
 		
-			$tokens = [];
+			$tokens = [
+				"req" => null,
+				"data" => null,
+				"cookies" => null
+			];
 			
 			$inputs =
 				$this->fuckhtml
@@ -213,63 +227,66 @@ class greppr{
 					continue;
 				}
 				
-				switch($input["attributes"]["name"]){
+				if(
+					isset($input["attributes"]["value"]) &&
+					!empty($input["attributes"]["value"])
+				){
 					
-					case "var1":
-					case "var2":
-					case "n":
-						$tokens[$input["attributes"]["name"]] =
-							$this->fuckhtml
-							->getTextContent(
-								$input["attributes"]["value"]
-							);
-						break;
+					$tokens
+						["data"]
+						[$this->fuckhtml
+						->getTextContent(
+							$input["attributes"]["name"]
+						)] =
+						$this->fuckhtml
+						->getTextContent(
+							$input["attributes"]["value"]
+						);
+				}else{
 					
-					default:
-						$tokens["req"] =
-							$this->fuckhtml
-							->getTextContent(
-								$input["attributes"]["name"]
-							);
-						break;
+					$tokens["req"] =
+						$this->fuckhtml
+						->getTextContent(
+							$input["attributes"]["name"]
+						);
 				}
 			}
 			
-			// get cookie
-			preg_match(
-				'/PHPSESSID=([^;]+)/',
-				$html["headers"]["set-cookie"],
-				$cookie
-			);
-			
-			if(!isset($cookie[1])){
+			if($tokens["req"] === null){
 				
-				// server sent an unexpected cookie
-				throw new Exception("Got malformed cookie");
+				throw new Exception("Failed to get request ID");
 			}
 			
-			$tokens["cookie"] = $cookie[1];
-			
-			if($tokens === false){
+			if(isset($html["headers"]["set-cookie"])){
 				
-				throw new Exception("Failed to grep search tokens");
+				foreach($html["headers"]["set-cookie"] as $cookie){
+					
+					if(
+						preg_match(
+							'/([^=]+)=([^;]+)/',
+							$cookie,
+							$matches
+						)
+					){
+						
+						$tokens["cookies"][$matches[1]] = $matches[2];
+					}
+				}
 			}
 			
 			//
 			// Get initial search page
 			//
-			try{
+			$tokens_req = $tokens["data"];
+			$tokens_req[$tokens["req"]] = $search;
 			
+			try{
+				
 				$html = $this->get(
 					$proxy,
 					"https://greppr.org/search",
-					[
-						"var1" => $tokens["var1"],
-						"var2" => $tokens["var2"],
-						$tokens["req"] => $search,
-						"n" => $tokens["n"]
-					],
-					$tokens["cookie"],
+					$tokens_req,
+					$tokens["cookies"],
 					true
 				);
 			}catch(Exception $error){
@@ -338,7 +355,7 @@ class greppr{
 									->getTextContent(
 										$a["attributes"]["href"]
 									),
-								"cookie" => $tokens["cookie"]
+								"cookies" => $tokens["cookies"]
 							]),
 							"web",
 							$proxy
