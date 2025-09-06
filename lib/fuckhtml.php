@@ -556,10 +556,12 @@ class fuckhtml{
 					if(
 						$i > 2 && // only check if a quote could be there
 						(
-							$json[$i - 1] === "\\" &&
-							$json[$i - 2] === "\\"
-						) ||
-						$json[$i - 1] !== "\\"
+							(
+								$json[$i - 1] === "\\" &&
+								$json[$i - 2] === "\\"
+							) ||
+							$json[$i - 1] !== "\\"
+						)
 					){
 						// found a non-escaped quote
 						
