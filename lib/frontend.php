@@ -938,10 +938,12 @@ class frontend{
 					"option" => [
 						"ddg" => "DuckDuckGo",
 						"brave" => "Brave",
+						"mullvad_brave" => "Mullvad (Brave)",
 						"yandex" => "Yandex",
 						"google" => "Google",
 						//"google_api" => "Google API",
 						"google_cse" => "Google CSE",
+						"mullvad_google" => "Mullvad (Google)",
 						"startpage" => "Startpage",
 						"qwant" => "Qwant",
 						"ghostery" => "Ghostery",
@@ -952,7 +954,7 @@ class frontend{
 						"mojeek" => "Mojeek",
 						"baidu" => "Baidu",
 						"coccoc" => "Cốc Cốc",
-						//"solofield" => "Solofield",
+						"solofield" => "Solofield",
 						"marginalia" => "Marginalia",
 						"wiby" => "wiby",
 						"curlie" => "Curlie"
@@ -973,7 +975,7 @@ class frontend{
 						"qwant" => "Qwant",
 						"yep" => "Yep",
 						"baidu" => "Baidu",
-						//"solofield" => "Solofield",
+						"solofield" => "Solofield",
 						"pinterest" => "Pinterest",
 						"cara" => "Cara",
 						"flickr" => "Flickr",
@@ -991,6 +993,7 @@ class frontend{
 					"display" => "Scraper",
 					"option" => [
 						"yt" => "YouTube",
+						"archiveorg" => "Archive.org",
 						"vimeo" => "Vimeo",
 						//"odysee" => "Odysee",
 						"sepiasearch" => "Sepia Search",
@@ -1002,8 +1005,8 @@ class frontend{
 						"startpage" => "Startpage",
 						"qwant" => "Qwant",
 						"baidu" => "Baidu",
-						"coccoc" => "Cốc Cốc"
-						//"solofield" => "Solofield"
+						"coccoc" => "Cốc Cốc",
+						"solofield" => "Solofield"
 					]
 				];
 				break;
@@ -1344,6 +1347,7 @@ class frontend{
 			return htmlspecialchars($image);
 		}
 		
+		//return "https://4get.ca/proxy?i=" . urlencode($image) . "&s=" . $format;
 		return "/proxy?i=" . urlencode($image) . "&s=" . $format;
 	}
 	
