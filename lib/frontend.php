@@ -993,7 +993,7 @@ class frontend{
 					"display" => "Scraper",
 					"option" => [
 						"yt" => "YouTube",
-						"archiveorg" => "Archive.org",
+						//"archiveorg" => "Archive.org",
 						"vimeo" => "Vimeo",
 						//"odysee" => "Odysee",
 						"sepiasearch" => "Sepia Search",
