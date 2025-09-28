@@ -34,7 +34,8 @@ class ddg{
 		switch($reqtype){
 			case self::req_web:
 				$headers =
-					["User-Agent: " . config::USER_AGENT,
+					[//"User-Agent: " . config::USER_AGENT,
+					"User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
 					"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
 					"Accept-Language: en-US,en;q=0.5",
 					"Accept-Encoding: gzip",
@@ -490,6 +491,7 @@ class ddg{
 			throw new Exception("Failed to fetch d.js");
 		}
 		
+		//$js = file_get_contents("scraper/fuck.js");
 		//echo htmlspecialchars($js);
 		
 		$js_tmp =
@@ -500,6 +502,139 @@ class ddg{
 			);
 		
 		if(count($js_tmp) <= 1){
+			
+			//
+			// Detect javascript challenge
+			//
+			if(
+				preg_match(
+					'/DDG\.deep\.initialize\(\'([^\']+)\'\ *\+ *jsa/i',
+					$js,
+					$challenge_url
+				)
+			){
+				
+				throw new Exception("DuckDuckGo returned a JSA challenge");
+				
+				// get JSA initial token
+				if(
+					!preg_match(
+						'/let jsa *= *([0-9]+)/',
+						$js,
+						$jsa
+					)
+				){
+					
+					$jsa = 0;
+				}else{
+					
+					$jsa = (int)$jsa[1];
+				}
+				
+				// get function bodies
+				preg_match_all(
+					'/let *([A-Za-z0-9]+) *= *function\(.*\) *{(.*)};/sU',
+					$js,
+					$functions
+				);
+				
+				$parsed_functions = [];
+				
+				for($i=0; $i<count($functions[0]); $i++){
+					
+					$functions[2][$i] = trim($functions[2][$i]);
+					
+					if(
+						preg_match(
+							'/return num *\* *([0-9]+)/i',
+							$functions[2][$i],
+							$num
+						)
+					){
+						
+						$parsed_functions[$functions[1][$i]] = [
+							"type" => "multiplication",
+							"num" => (int)$num[1]
+						];
+						continue;
+					}
+					
+					if(
+						preg_match(
+							'/innerHTML *= *`([^`]+)`/i',
+							$functions[2][$i],
+							$challenge
+						)
+					){
+						
+						$challenge[1] =
+							preg_replace(
+								'/<\/(br)>/',
+								'<$1>',
+								$challenge[1]
+							);
+						
+						$parsed_functions[$functions[1][$i]] = [
+							"type" => "challenge",
+							"text" => $challenge[1]
+						];
+					}
+				}
+				
+				// get function call order
+				preg_match_all(
+					'/jsa *= *([A-Za-z0-9]+)\(jsa\)/i',
+					$js,
+					$call_order
+				);
+				
+				foreach($call_order[1] as $order){
+					
+					if(!isset($parsed_functions[$order])){
+						
+						throw new Exception("JS challenge solve failure: DuckDuckGo called an unknown function");
+					}
+					
+					if($parsed_functions[$order]["type"] == "multiplication"){
+						
+						$jsa = $jsa * $parsed_functions[$order]["num"];
+						continue;
+					}
+					
+					if($parsed_functions[$order]["type"] == "challenge"){
+						
+						// @TODO get parsed length
+						//$parsed_functions[$order]["text"]
+						
+						$jsa = $jsa + strlen($parsed_functions[$order]["text"]);
+					}
+				}
+				
+				try{
+					$js = $this->get(
+						$proxy,
+						"https://links.duckduckgo.com" . $challenge_url[1] . $jsa,
+						[],
+						ddg::req_xhr
+					);
+				}catch(Exception $error){
+					
+					throw new Exception("Failed to get challenged d.js");
+				}
+			}
+			
+			//
+			// Detect JavaScript anomaly failure thingy
+			//
+			if(
+				preg_match(
+					'/DDG.deep.anomalyDetectionBlock\({/',
+					$js
+				)
+			){
+				
+				throw new Exception("DuckDuckGo detected an anomaly in the Javascript challenge response");
+			}
 			
 			throw new Exception("Failed to grep pageLayout(d)");
 		}
