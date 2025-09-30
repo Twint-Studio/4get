@@ -679,6 +679,12 @@ class ddg{
 			
 			$this->fuckhtml->load($result);
 			
+			if(stripos($result["attributes"]["class"], "result--ad") !== false){
+				
+				// found an ad
+				continue;
+			}
+			
 			$title =
 				$this->fuckhtml
 				->getElementsByTagName(
