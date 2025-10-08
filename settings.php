@@ -138,6 +138,10 @@ $settings = [
 						"text" => "Google"
 					],
 					[
+						"value" => "google_api",
+						"text" => "Google API"
+					],
+					[
 						"value" => "google_cse",
 						"text" => "Google CSE"
 					],

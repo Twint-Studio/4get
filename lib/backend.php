@@ -9,7 +9,7 @@ class backend{
 	/*
 		Proxy stuff
 	*/
-	public function get_ip(){
+	public function get_ip($proxy_index_raw = null){
 		
 		$pool = constant("config::PROXY_" . strtoupper($this->scraper));
 		if($pool === false){
@@ -19,7 +19,10 @@ class backend{
 		}
 		
 		// indent
-		$proxy_index_raw = apcu_inc("p." . $this->scraper);
+		if($proxy_index_raw === null){
+			
+			$proxy_index_raw = apcu_inc("p." . $this->scraper);
+		}
 		
 		$proxylist = file_get_contents("data/proxies/" . $pool . ".txt");
 		$proxylist = explode("\n", $proxylist);
@@ -32,6 +35,12 @@ class backend{
 		
 		$proxylist = array_values($proxylist);
 		
+		if(count($proxylist) === 0){
+			
+			throw new Exception("A proxy list was specified but it's empty!");
+		}
+		
+		//echo $proxylist[$proxy_index_raw % count($proxylist)];
 		return $proxylist[$proxy_index_raw % count($proxylist)];
 	}
 	
@@ -88,6 +97,30 @@ class backend{
 		}
 	}
 	
+	// API key rotation
+	public function get_key(){
+		
+		$keys = file_get_contents("data/api_keys/" . $this->scraper . ".txt");
+		$keys = explode("\n", $keys);
+		
+		$keys = array_filter($keys, function($entry){
+			$entry = ltrim($entry);
+			return strlen($entry) > 0 && substr($entry, 0, 1) != "#";
+		});
+		
+		$keys = array_values($keys);
+		
+		if(count($keys) === 0){
+			
+			throw new Exception("Please specify API keys in data/api_keys/" . $this->scraper . ".txt");
+		}
+		
+		$increment = apcu_inc("s." . $this->scraper) % count($keys);
+		return [
+			"key" => $keys[$increment],
+			"increment" => $increment
+		];
+	}
 	
 	
 	/*
