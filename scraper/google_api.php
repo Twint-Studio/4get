@@ -716,10 +716,8 @@ class google_api{
 		// get npt
 		if(isset($json["queries"]["nextPage"][0]["startIndex"])){
 			
-			$filters["start"] = (int)$json["queries"]["nextPage"][0]["startIndex"];
-			
 			unset($params["key"]);
-			$params["start"] += 10;
+			$params["start"] = (int)$json["queries"]["nextPage"][0]["startIndex"];
 			
 			$out["npt"] =
 				$this->backend->store(
