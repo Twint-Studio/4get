@@ -570,7 +570,7 @@ class google_api{
 			"video" => [],
 			"news" => [],
 			"related" => []
-		];		
+		];
 		
 		if(isset($json["error"]["message"])){
 			
@@ -583,7 +583,8 @@ class google_api{
 		
 		if(!isset($json["items"])){
 			
-			throw new Exception("Failed to access items array");
+			// google just doesnt return items when theres no results
+			return $out;
 		}
 		
 		foreach($json["items"] as $result){
