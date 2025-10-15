@@ -23,6 +23,10 @@ else
         cp -r ${FOURGET_SRC}/docker/apache/http/conf.d/* /etc/apache2/conf.d
 fi
 
+echo $PORT
+
+sed -i "s/^Listen .*/Listen ${PORT}/" /etc/apache2/httpd.conf
+
 php ./docker/gen_config.php
 
 if [ "$@" = "start" ]; then
