@@ -504,12 +504,9 @@ class google{
 		}
 	}
 	
-	private function get($proxy, $url, $get = []){
+	private function get($proxy, $url, $get = [], $alt_ua = false){
 		
 		$curlproc = curl_init();
-				
-		// use http2 in all cases
-		curl_setopt($curlproc, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
 		
 		if($get !== []){
 			$get = http_build_query($get);
@@ -519,21 +516,36 @@ class google{
 		curl_setopt($curlproc, CURLOPT_URL, $url);
 		
 		curl_setopt($curlproc, CURLOPT_ENCODING, ""); // default encoding
-		curl_setopt($curlproc, CURLOPT_HTTPHEADER, [
-			"User-Agent: " . config::USER_AGENT,
-			"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-			"Accept-Language: en-US,en;q=0.5",
-			"Accept-Encoding: gzip",
-			"DNT: 1",
-			"Connection: keep-alive",
-			"Upgrade-Insecure-Requests: 1",
-			"Sec-Fetch-Dest: document",
-			"Sec-Fetch-Mode: navigate",
-			"Sec-Fetch-Site: none",
-			"Sec-Fetch-User: ?1",
-			"Priority: u=1",
-			"TE: trailers"
-		]);
+		
+		if($alt_ua === true){
+			
+			curl_setopt($curlproc, CURLOPT_HTTPHEADER, [
+				"User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows CE; PPC; 240x320) Opera 8.65 [nl]",
+				"Accept: text/html, application/xml;q=0.9, */*;q=0.8",
+				"Accept-Language: nl,en;q=0.8",
+				"Accept-Encoding: gzip, deflate",
+				"Connection: Keep-Alive",
+				"Cache-Control: no-cache"
+			]);
+		}else{
+			
+			curl_setopt($curlproc, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
+			curl_setopt($curlproc, CURLOPT_HTTPHEADER, [
+				"User-Agent: " . config::USER_AGENT,
+				"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+				"Accept-Language: en-US,en;q=0.5",
+				"Accept-Encoding: gzip",
+				"DNT: 1",
+				"Connection: keep-alive",
+				"Upgrade-Insecure-Requests: 1",
+				"Sec-Fetch-Dest: document",
+				"Sec-Fetch-Mode: navigate",
+				"Sec-Fetch-Site: none",
+				"Sec-Fetch-User: ?1",
+				"Priority: u=1",
+				"TE: trailers"
+			]);
+		}
 		
 		curl_setopt($curlproc, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($curlproc, CURLOPT_SSL_VERIFYHOST, 2);
@@ -561,7 +573,425 @@ class google{
 	
 	public function web($get){
 		
-		throw new Exception("Google made it impossible to scrape web results without a JavaScript runtime. In the meantime, use the Google API or the Google CSE scrapers.");
+		// this is going to break soon. I wont scrape the answers simply cause its not worth my time.
+		// If only their API wasn't such dogshit maybe I wouldnt need to fuck with this. this isn't
+		// just a rant. I know a Google engineer is reading this, give me real fucking results
+		// you worthless sacks of shit
+		
+		$out = [
+			"status" => "ok",
+			"spelling" => [
+				"type" => "no_correction",
+				"using" => null,
+				"correction" => null
+			],
+			"npt" => null,
+			"answer" => [],
+			"web" => [],
+			"image" => [],
+			"video" => [],
+			"news" => [],
+			"related" => []
+		];
+		
+		if($get["npt"]){
+			
+			[$get, $proxy] = $this->backend->get($get["npt"], "web");
+			
+			try{
+				$html =
+					$this->get(
+						$proxy,
+						"https://www.google.com" . $get,
+						[],
+						true
+					);
+			}catch(Exception $error){
+				
+				throw new Exception("Failed to get HTML");
+			}
+		}else{
+			
+			$search = $get["s"];
+			$country = $get["country"];
+			$nsfw = $get["nsfw"];
+			$lang = $get["lang"];
+			$older = $get["older"];
+			$newer = $get["newer"];
+			$spellcheck = $get["spellcheck"];
+			$proxy = $this->backend->get_ip();
+			
+			$offset = 0;
+			
+			$params = [
+				"q" => $search,
+				"hl" => "en"
+			];
+			
+			// country
+			if($country != "any"){
+				
+				$params["gl"] = $country;
+			}
+			
+			// nsfw
+			$params["safe"] = $nsfw == "yes" ? "off" : "active";
+			
+			// language
+			if($lang != "any"){
+				
+				$params["lr"] = "lang_" . $lang;
+			}
+			
+			// generate tbs
+			$tbs = [];
+			
+			// get date
+			$older = $older === false ? null : date("m/d/Y", $older);
+			$newer = $newer === false ? null : date("m/d/Y", $newer);
+			
+			if(
+				$older !== null ||
+				$newer !== null
+			){
+				
+				$tbs["cdr"] = "1";
+				$tbs["cd_min"] = $newer;
+				$tbs["cd_max"] = $older;
+			}
+			
+			// spellcheck filter
+			if($spellcheck == "no"){
+				
+				$params["nfpr"] = "1";
+			}
+			
+			if(count($tbs) !== 0){
+				
+				$params["tbs"] = "";
+				
+				foreach($tbs as $key => $value){
+					
+					$params["tbs"] .= $key . ":" . $value . ",";
+				}
+				
+				$params["tbs"] = rtrim($params["tbs"], ",");
+			}
+			
+			try{
+				$html =
+					$this->get(
+						$proxy,
+						"https://www.google.com/search",
+						$params,
+						true
+					);
+			}catch(Exception $error){
+				
+				throw new Exception("Failed to get HTML");
+			}
+			//$html = file_get_contents("scraper/google.html");
+		}
+		
+		// init
+		$this->fuckhtml->load($html);
+		$this->detect_sorry();
+		$this->parsestyles();
+		
+		// iterate over results
+		$containers =
+			$this->fuckhtml
+			->getElementsByClassName(
+				$this->getstyle([
+					"background-color" => "#fff",
+					"margin-bottom" => "10px",
+					"margin" => "0px 0px 8px",
+					"box-shadow" => "0 0 0 1px #ebedef"
+				])
+			);
+		
+		foreach($containers as $container){
+			
+			$this->fuckhtml->load($container);
+			
+			//
+			// Probe for next page container
+			//
+			$npt =
+				$this->fuckhtml
+				->getElementsByAttributeValue(
+					"aria-label",
+					"Next page",
+					"a"
+				);
+			
+			if(count($npt) !== 0){
+				
+				// found next page object
+				$out["npt"] =
+					$this->backend->store(
+						$this->fuckhtml
+						->getTextContent(
+							$npt[0]
+							["attributes"]
+							["href"]
+						),
+						"web",
+						$proxy
+					);
+				continue;
+			}
+			
+			//
+			// Probe for "did you mean" bullshit
+			//
+			$ddm =
+				$this->fuckhtml
+				->getElementsByClassName(
+					$this->getstyle([
+						"font-size" => "20px",
+						"font-weight" => "bold",
+						"line-height" => "26px",
+						"color" => "#1f1f1f",
+						"height" => "14px",
+						"padding" => "16px 14px 0px 14px",
+						"margin" => "0"
+					])
+				);
+			
+			if(
+				count($ddm) !== 0 &&
+				strtolower(
+					$this->fuckhtml
+					->getTextContent(
+						$ddm[0]
+					)
+				) == "people also search for"
+			){
+				
+				$as =
+					$this->fuckhtml
+					->getElementsByTagName("a");
+				
+				foreach($as as $a){
+					
+					$out["related"][] =
+						$this->fuckhtml
+						->getTextContent(
+							$a
+						);
+				}
+				continue;
+			}
+			
+			//
+			// Parse normal web results
+			//
+			
+			// probe for website ellipsis shit
+			$ellipsis =
+				$this->fuckhtml
+				->getElementsByClassName(
+					$this->getstyle([
+						"text-overflow" => "ellipsis",
+						"white-space" => "nowrap",
+						"overflow" => "hidden"
+					])
+				);
+			
+			if(count($ellipsis) < 1){
+				
+				// should not happen
+				continue;
+			}
+			
+			$title =
+				$this->fuckhtml
+				->getElementsByTagName(
+					"h3"
+				);
+			
+			if(count($title) === 0){
+				
+				// should not happen
+				continue;
+			}
+			
+			$title =
+				$this->fuckhtml
+				->getTextContent(
+					$title[0]
+				);
+			
+			// get URL
+			$as =
+				$this->fuckhtml
+				->getElementsByTagName(
+					"a"
+				);
+			
+			if(count($as) === 0){
+				
+				// should not happen
+				continue;
+			}
+			
+			$link =
+				$this->unshiturl(
+					$as[0]
+					["attributes"]
+					["href"]
+				);
+			
+			// grep container separators
+			$separator =
+				$this->fuckhtml
+				->getElementsByClassName(
+					$this->getstyle([
+						"padding" => "16px 14px 12px"
+					])
+				);
+			
+			if(count($separator) < 2){
+				
+				// should not happen
+				continue;
+			}
+			
+			$this->fuckhtml->load($separator[1]);
+			
+			$snippets =
+				$this->fuckhtml
+				->getElementsByClassName(
+					$this->getstyle([
+						"white-space" => "pre-line",
+						"word-wrap" => "break-word"
+					])
+				);
+			
+			if(count($snippets) < 2){
+				
+				// should not happen
+				continue;
+			}
+			
+			// get description
+			$description =
+				$this->fuckhtml
+				->getTextContent(
+					$snippets[1]
+				);
+			
+			// get date from description
+			$exp_description = explode(" · ", $description, 2);
+			$date = null;
+			
+			if(count($exp_description) === 1){
+				
+				$description = $exp_description[0];
+			}else{
+				
+				$date_probe = strtotime($exp_description[0]);
+				
+				if(
+					strlen($exp_description[0]) <= 17 &&
+					$date_probe !== false
+				){
+					
+					$date = $date_probe;
+					$description = $exp_description[1];
+				}
+			}
+			
+			// get thumb
+			$thumb_probe =
+				$this->fuckhtml
+				->getElementsByTagName(
+					"img"
+				);
+			
+			// too lazy to fix this piece of shit
+			// will probably break soon anyways idgaf
+			/*
+			if(count($thumb_probe) === 0){
+				
+				$thumb = [
+					"ratio" => null,
+					"url" => null
+				];
+			}else{
+				
+				$thumb = [
+					"ratio" => "1:1",
+					"url" =>
+						$this->getdimg(
+							$thumb_probe[0]
+							["attributes"]
+							["id"]
+						)
+				];
+			}*/
+			
+			$thumb = [
+				"ratio" => null,
+				"url" => null
+			];
+			
+			// get sublinks
+			$sublinks = [];
+			foreach($as as $a){
+				
+				$this->fuckhtml->load($a);
+				
+				$probe =
+					$this->fuckhtml
+					->getElementsByClassName(
+						$this->getstyle([
+							"color" => "#1558d6",
+							"font-size" => "14px",
+							"line-height" => "20px"
+						])
+					);
+				
+				if(count($probe) !== 0){
+					
+					$sublinks[] = [
+						"title" =>
+							$this->titledots(
+								$this->fuckhtml
+								->getTextContent(
+									$probe[0]
+								)
+							),
+						"description" => null,
+						"date" => null,
+						"url" =>
+							$this->unshiturl(
+								$a["attributes"]["href"]
+							)
+					];
+				}
+			}
+			
+			$out["web"][] = [
+				"title" =>
+					$this->titledots(
+						$title
+					),
+				"description" =>
+					$this->titledots(
+						$description
+					),
+				"url" => $link,
+				"date" => $date,
+				"type" => "web",
+				"thumb" => $thumb,
+				"sublink" => $sublinks,
+				"table" => []
+			];
+		}
+		
+		return $out;
 	}
 	
 	
