@@ -1,50 +1,32 @@
-name: Build 4get
+name: Deploy to Heroku
 
 on:
   push:
-    branches: ["bang"]
-  workflow_dispatch:
-    inputs:
-      cache:
-        description: "Use cache if available"
-        required: false
-        default: true
-        type: boolean
+    branches:
+      - master
 
 jobs:
-  build:
+  deploy:
     runs-on: [ubuntu-latest, amd64]
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v3
+      - name: Set up Heroku CLI
+        run: curl https://cli-assets.heroku.com/install.sh | sh
 
-      - name: Setup Docker buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Heroku container login
+        run: heroku container:login
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
 
-      - name: Set Lowercase Repository Name
-        run: echo "lowercase=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+      - name: Push container
+        run: heroku container:push web -a ${{ secrets.HEROKU_APP_NAME }}
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
 
-      - name: Login
-        run: echo "${{ secrets.TOKEN }}" | docker login ${{ vars.REGISTRY }} -u ${{ github.actor }} --password-stdin
-
-      - name: Build
-        run: |
-          if [ "${{ inputs.cache }}" = "0" ]; then
-            docker build --no-cache -t ${{ env.lowercase }}:latest .
-          else
-            docker build -t ${{ env.lowercase }}:latest .
-          fi
-
-      - name: Tag
-        run: docker tag ${{ env.lowercase }}:latest ${{ vars.REGISTRY }}/${{ env.lowercase }}:latest
-
-      - name: Push
-        run: docker push ${{ vars.REGISTRY }}/${{ env.lowercase }}:latest
-
-      - name: Cleanup
-        continue-on-error: true
-        run: docker images -f "dangling=true" -q | xargs -r docker rmi
+      - name: Release container
+        run: heroku container:release web -a ${{ secrets.HEROKU_APP_NAME }}
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
