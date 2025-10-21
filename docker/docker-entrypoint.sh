@@ -25,6 +25,8 @@ fi
 
 echo $PORT
 
+PORT="${PORT:-80}"
+
 sed -i "s/^Listen .*/Listen ${PORT}/" /etc/apache2/httpd.conf
 
 php ./docker/gen_config.php

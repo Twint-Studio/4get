@@ -1,0 +1,32 @@
+name: Deploy to Heroku
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: [ubuntu-latest, amd64]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Heroku CLI
+        run: curl https://cli-assets.heroku.com/install.sh | sh
+
+      - name: Heroku container login
+        run: heroku container:login
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Push container
+        run: heroku container:push web -a ${{ secrets.HEROKU_APP_NAME }}
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Release container
+        run: heroku container:release web -a ${{ secrets.HEROKU_APP_NAME }}
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
