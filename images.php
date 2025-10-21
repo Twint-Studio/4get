@@ -13,6 +13,20 @@ $frontend = new frontend();
 $get = $frontend->parsegetfilters($_GET, $filters);
 
 /*
+	Check for bangs and redirect if found
+*/
+if (isset($get["s"]) && !empty($get["s"])) {
+	include "lib/bangs.php";
+	$bangs = new bangs();
+	
+	$redirect_url = $bangs->resolve($get["s"]);
+	if ($redirect_url !== null) {
+		header("Location: " . $redirect_url);
+		die();
+	}
+}
+
+/*
 	Captcha
 */
 include "lib/bot_protection.php";

@@ -27,6 +27,23 @@ new bot_protection($null, $null, $null, "web", false);
 
 $get = $frontend->parsegetfilters($_GET, $filters);
 
+/*
+	Check for bangs and return redirect URL in JSON
+*/
+if (isset($get["s"]) && !empty($get["s"])) {
+	include "lib/bangs.php";
+	$bangs = new bangs();
+	
+	$redirect_url = $bangs->resolve($get["s"]);
+	if ($redirect_url !== null) {
+		echo json_encode([
+			"status" => "bang_redirect",
+			"redirect_url" => $redirect_url
+		]);
+		die();
+	}
+}
+
 if(
 	isset($_GET["extendedsearch"]) &&
 	$_GET["extendedsearch"] == "yes"
