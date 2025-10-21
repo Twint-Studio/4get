@@ -953,23 +953,33 @@ class google{
 						])
 					);
 				
-				if(count($probe) !== 0){
+				$url =
+					$this->unshiturl(
+						$a["attributes"]["href"]
+					);
+				
+				if(
+					preg_match(
+						'/^http/',
+						$url
+					)
+				){
 					
-					$sublinks[] = [
-						"title" =>
-							$this->titledots(
-								$this->fuckhtml
-								->getTextContent(
-									$probe[0]
-								)
-							),
-						"description" => null,
-						"date" => null,
-						"url" =>
-							$this->unshiturl(
-								$a["attributes"]["href"]
-							)
-					];
+					if(count($probe) !== 0){
+						
+						$sublinks[] = [
+							"title" =>
+								$this->titledots(
+									$this->fuckhtml
+									->getTextContent(
+										$probe[0]
+									)
+								),
+							"description" => null,
+							"date" => null,
+							"url" => $url
+						];
+					}
 				}
 			}
 			
