@@ -1,0 +1,31 @@
+name: Update Bangs
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 0"
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Update Script
+        run: ./.forgejo/update.sh ./static/engines.json ./static/custom.json
+
+      - name: Commit and push
+        run: |
+          git config user.name actions[bot]
+          git config user.email actions@serversmp.xyz
+
+          git add -A
+
+          if ! git diff --cached --quiet; then
+            git commit -m "Update bangs"
+            git push
+          else
+            echo "No changes to commit."
+          fi
