@@ -1604,6 +1604,18 @@
     "sc": "Blogs"
   },
   {
+    "s": "Apple Gaming Wiki",
+    "d": "www.applegamingwiki.com",
+    "t": "agw",
+    "ts": [
+      "applegaming",
+      "applegamingwiki"
+    ],
+    "u": "https://www.applegamingwiki.com/w/index.php?search={{{s}}}",
+    "c": "Entertainment",
+    "sc": "Games (general)"
+  },
+  {
     "s": "Cortas",
     "d": "cortas.elpais.com",
     "t": "acortar",
@@ -9911,7 +9923,7 @@
     "s": "boomkat",
     "d": "boomkat.com",
     "t": "boomkat",
-    "u": "http://boomkat.com/search?q={{{s}}}",
+    "u": "http://boomkat.com/products?q[keywords]={{{s}}}",
     "c": "Multimedia",
     "sc": "Music"
   },
@@ -15700,18 +15712,6 @@
     "sc": "Tracking"
   },
   {
-    "s": "cppreference.com",
-    "d": "en.cppreference.com",
-    "t": "cpp",
-    "ts": [
-      "cppref",
-      "c++ref"
-    ],
-    "u": "https://en.cppreference.com/mwiki/index.php?search={{{s}}}",
-    "c": "Tech",
-    "sc": "Languages (c++)"
-  },
-  {
     "s": "cppreference",
     "d": "de.cppreference.com",
     "t": "cppde",
@@ -20480,14 +20480,6 @@
     "sc": "Tools (URLs)"
   },
   {
-    "s": "Digital Open Access Identifier",
-    "d": "doai.io",
-    "t": "doai",
-    "u": "https://doai.io/{{{s}}}",
-    "c": "Online Services",
-    "sc": "Tools (URLs)"
-  },
-  {
     "s": "Directory of Open Access Journals",
     "d": "www.doaj.org",
     "t": "doaj",
@@ -24187,6 +24179,17 @@
     "u": "http://www.globalspec.com/search/all?query={{{s}}}",
     "c": "Shopping",
     "sc": "Online (marketplace)"
+  },
+  {
+    "s": "Engineering Archive",
+    "d": "engrxiv.org",
+    "t": "engr",
+    "ts": [
+      "engrxiv"
+    ],
+    "u": "https://engrxiv.org/search/search?query={{{s}}}",
+    "c": "Research",
+    "sc": "Academic"
   },
   {
     "s": "Engrish",
@@ -45087,14 +45090,6 @@
     "sc": "Jobs"
   },
   {
-    "s": "letterboxd",
-    "d": "letterboxd.com",
-    "t": "lb",
-    "u": "https://letterboxd.com/search/{{{s}}}/",
-    "c": "Entertainment",
-    "sc": "Movies"
-  },
-  {
     "s": "Logos Bible Software",
     "d": "www.logos.com",
     "t": "lbs",
@@ -45107,6 +45102,7 @@
     "d": "letterboxd.com",
     "t": "lbx",
     "ts": [
+      "lb",
       "ltr",
       "letterboxd"
     ],
@@ -47978,6 +47974,18 @@
     "u": "https://library.macewan.ca/library-search?query={{{s}}}",
     "c": "Research",
     "sc": "Academic"
+  },
+  {
+    "s": "MacGamingDB",
+    "d": "macgamingdb.app",
+    "t": "mgdb",
+    "ts": [
+      "macgaming",
+      "macgamingdb"
+    ],
+    "u": "https://macgamingdb.app/?q={{{s}}}",
+    "c": "Entertainment",
+    "sc": "Games (general)"
   },
   {
     "s": "MacGeneration",
@@ -83267,18 +83275,6 @@
     "sc": "Reference"
   },
   {
-    "s": "Wiktionary",
-    "d": "en.wiktionary.org",
-    "t": "wdic",
-    "ts": [
-      "wictionary",
-      "wkten"
-    ],
-    "u": "https://en.wiktionary.org/wiki/{{{s}}}",
-    "c": "Research",
-    "sc": "Reference (words)"
-  },
-  {
     "s": "Wordreference (es)",
     "d": "www.wordreference.com",
     "t": "wdr",
@@ -86365,15 +86361,18 @@
     "sc": "Reference (words)"
   },
   {
-    "s": "Wikitionary",
+    "s": "Wiktionary",
     "d": "en.wiktionary.org",
     "t": "wtionary",
     "ts": [
-      "wt"
+      "wt",
+      "wdic",
+      "wictionary",
+      "wkten"
     ],
     "u": "https://en.wiktionary.org/w/index.php?search={{{s}}}&title=Special:Search&go=Go",
     "c": "Research",
-    "sc": "Learning"
+    "sc": "Reference (words)"
   },
   {
     "s": "What the fuck should I listen to right now",
