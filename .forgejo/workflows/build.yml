@@ -1,0 +1,110 @@
+name: Build and Deploy 4get
+
+on:
+  push:
+    branches: ["master"]
+  workflow_dispatch:
+    inputs:
+      cache:
+        description: "Use cache if available"
+        required: false
+        default: true
+        type: boolean
+      skip_update:
+        description: "Skip update bangs step"
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    - cron: "0 0 * * 0"
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' && !inputs.skip_update
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Update Script
+        run: ./.forgejo/update.sh ./static/engines.json ./static/custom.json
+
+      - name: Commit and push
+        run: |
+          git config user.name actions[bot]
+          git config user.email actions@serversmp.xyz
+
+          git add -A
+
+          if ! git diff --cached --quiet; then
+            git commit -m "Update bangs"
+            git push
+          else
+            echo "No changes to commit."
+          fi
+
+  build:
+    runs-on: [ubuntu-latest, amd64]
+    needs: update
+    if: always() && (needs.update.result == 'success' || needs.update.result == 'skipped')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set Lowercase Repository Name
+        run: echo "lowercase=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Login
+        run: echo "${{ secrets.TOKEN }}" | docker login ${{ vars.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+      - name: Build
+        run: |
+          if [ "${{ inputs.cache }}" = "false" ] || [ "${{ inputs.cache }}" = "0" ]; then
+            docker build --no-cache -t ${{ env.lowercase }}:latest .
+          else
+            docker build -t ${{ env.lowercase }}:latest .
+          fi
+
+      - name: Tag
+        run: docker tag ${{ env.lowercase }}:latest ${{ vars.REGISTRY }}/${{ env.lowercase }}:latest
+
+      - name: Push
+        run: docker push ${{ vars.REGISTRY }}/${{ env.lowercase }}:latest
+
+      - name: Cleanup
+        continue-on-error: true
+        run: docker images -f "dangling=true" -q | xargs -r docker rmi
+
+  deploy:
+    runs-on: [ubuntu-latest, amd64]
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Heroku CLI
+        run: curl https://cli-assets.heroku.com/install.sh | sh
+
+      - name: Heroku container login
+        run: heroku container:login
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Push container
+        run: heroku container:push web -a ${{ secrets.HEROKU_APP_NAME }}
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Release container
+        run: heroku container:release web -a ${{ secrets.HEROKU_APP_NAME }}
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
