@@ -126,10 +126,6 @@ $settings = [
 						"text" => "Brave"
 					],
 					[
-						"value" => "mullvad_brave",
-						"text" => "Mullvad (Brave)"
-					],
-					[
 						"value" => "yandex",
 						"text" => "Yandex"
 					],
@@ -144,10 +140,6 @@ $settings = [
 					[
 						"value" => "google_cse",
 						"text" => "Google CSE"
-					],
-					[
-						"value" => "mullvad_google",
-						"text" => "Mullvad (Google)"
 					],
 					[
 						"value" => "startpage",
