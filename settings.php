@@ -126,10 +126,6 @@ $settings = [
 						"text" => "Brave"
 					],
 					[
-						"value" => "mullvad_brave",
-						"text" => "Mullvad (Brave)"
-					],
-					[
 						"value" => "yandex",
 						"text" => "Yandex"
 					],
@@ -146,8 +142,8 @@ $settings = [
 						"text" => "Google CSE"
 					],
 					[
-						"value" => "mullvad_google",
-						"text" => "Mullvad (Google)"
+						"value" => "yahoo_japan",
+						"text" => "Yahoo! JAPAN",
 					],
 					[
 						"value" => "startpage",
@@ -232,6 +228,10 @@ $settings = [
 						"text" => "Google CSE"
 					],
 					[
+						"value" => "yahoo_japan",
+						"text" => "Yahoo! JAPAN",
+					],
+					[
 						"value" => "startpage",
 						"text" => "Startpage"
 					],
@@ -314,6 +314,10 @@ $settings = [
 						"text" => "Google"
 					],
 					[
+						"value" => "yahoo_japan",
+						"text" => "Yahoo! JAPAN",
+					],
+					[
 						"value" => "startpage",
 						"text" => "Startpage"
 					],
@@ -350,6 +354,10 @@ $settings = [
 					[
 						"value" => "google",
 						"text" => "Google"
+					],
+					[
+						"value" => "yahoo_japan",
+						"text" => "Yahoo! JAPAN",
 					],
 					[
 						"value" => "startpage",

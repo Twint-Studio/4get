@@ -118,13 +118,15 @@ class config{
 	
 	// Default user agent to use for scraper requests. Sometimes ignored to get specific webpages
 	// Changing this might break things.
-	const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:142.0) Gecko/20100101 Firefox/142.0";
+	const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0";
 	
 	// Proxy pool assignments for each scraper
 	// false = Use server's raw IP
 	// string = will load a proxy list from data/proxies
 	// Eg. "onion" will load data/proxies/onion.txt
 	const PROXY_DDG = false; // duckduckgo
+	const PROXY_YAHOO = false;
+	const PROXY_YAHOO_JAPAN = false;
 	const PROXY_BRAVE = false;
 	const PROXY_FB = false; // facebook
 	const PROXY_GOOGLE = false;
