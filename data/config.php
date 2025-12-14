@@ -142,6 +142,7 @@ class config{
 	const PROXY_MARGINALIA = false;
 	const PROXY_MOJEEK = false;
 	const PROXY_SC = false; // soundcloud
+	const PROXY_SWISSCOWS = false;
 	const PROXY_SPOTIFY = false;
 	const PROXY_SOLOFIELD = false;
 	const PROXY_WIBY = false;

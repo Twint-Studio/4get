@@ -397,7 +397,12 @@ class sc{
 					break;
 				
 				case "track":
-					if(stripos($item["monetization_model"], "TIER") === false){
+					$stream = [
+						"endpoint" => null,
+						"url" => null
+					];
+					
+					/*if(stripos($item["monetization_model"], "TIER") === false){
 						
 						$stream = [
 							"endpoint" => "sc",
@@ -413,7 +418,7 @@ class sc{
 							"endpoint" => null,
 							"url" => null
 						];
-					}
+					}*/
 					
 					// parse track
 					$out["song"][] = [

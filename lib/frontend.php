@@ -446,406 +446,418 @@ class frontend{
 			Add favicon
 		*/
 		$host = parse_url($link);
-		$esc =
-			explode(
-				".",
-				$host["host"],
-				2
-			);
 		
-		if(
-			count($esc) === 2 &&
-			$esc[0] == "www"
-		){
+		// special case for when we're not drawing a full url
+		if(!isset($host["host"])){
 			
-			$esc = $esc[1];
+			$payload =
+				'<div class="url">' .
+					'<button class="favicon" tabindex="-1">' .
+						'<img src="/favicon?s=404" alt="xx">' .
+					'</button>';
 		}else{
 			
-			$esc = $esc[0];
-		}
-		
-		$esc = substr($esc, 0, 2);
-		
-		$urlencode = urlencode($link);
-		
-		$payload =
-			'<div class="url">' .
-				'<button class="favicon" tabindex="-1">' .
-					'<img src="/favicon?s=' . htmlspecialchars($host["scheme"] . "://" . $host["host"]) . '" alt="' . htmlspecialchars($esc) . '">' .
-					//'<img src="/404.php" alt="' . htmlspecialchars($esc) . '">' .
-				'</button>' .
-				'<div class="favicon-dropdown">';
-		
-		/*
-			Add archive links
-		*/
-		if(
-			$host["host"] == "boards.4chan.org" ||
-			$host["host"] == "boards.4channel.org"
-		){
+			$esc =
+				explode(
+					".",
+					$host["host"],
+					2
+				);
 			
-			$archives = [];
-			$path = explode("/", $host["path"]);
-			$count = count($path);
-			// /pol/thread/417568063/post-shitty-memes-if-you-want-to
+			if(
+				count($esc) === 2 &&
+				$esc[0] == "www"
+			){
+				
+				$esc = $esc[1];
+			}else{
+				
+				$esc = $esc[0];
+			}
 			
-			if($count !== 0){
+			$esc = substr($esc, 0, 2);
+			
+			$urlencode = urlencode($link);
+			
+			$payload =
+				'<div class="url">' .
+					'<button class="favicon" tabindex="-1">' .
+						'<img src="/favicon?s=' . htmlspecialchars($host["scheme"] . "://" . $host["host"]) . '" alt="' . htmlspecialchars($esc) . '">' .
+						//'<img src="/404.php" alt="' . htmlspecialchars($esc) . '">' .
+					'</button>' .
+					'<div class="favicon-dropdown">';
+			
+			/*
+				Add archive links
+			*/
+			if(
+				$host["host"] == "boards.4chan.org" ||
+				$host["host"] == "boards.4channel.org"
+			){
 				
-				$isboard = true;
+				$archives = [];
+				$path = explode("/", $host["path"]);
+				$count = count($path);
+				// /pol/thread/417568063/post-shitty-memes-if-you-want-to
 				
-				switch($path[1]){
+				if($count !== 0){
 					
-					case "con":
-						break;
+					$isboard = true;
 					
-					case "q":
-						$archives[] = "desuarchive.org";
-						break;
+					switch($path[1]){
 						
-					case "qa":
-						$archives[] = "desuarchive.org";
-						break;
+						case "con":
+							break;
 						
-					case "qb":
-						$archives[] = "arch.b4k.co";
-						break;
+						case "q":
+							$archives[] = "desuarchive.org";
+							break;
+							
+						case "qa":
+							$archives[] = "desuarchive.org";
+							break;
+							
+						case "qb":
+							$archives[] = "arch.b4k.co";
+							break;
+							
+						case "trash":
+							$archives[] = "desuarchive.org";
+							break;
 						
-					case "trash":
-						$archives[] = "desuarchive.org";
-						break;
-					
-					case "a":
-						$archives[] = "desuarchive.org";
-						break;
-					
-					case "c":
-						$archives[] = "desuarchive.org";
-						break;
-					
-					case "w":
-						break;
-					
-					case "m":
-						$archives[] = "desuarchive.org";
-						break;
-					
-					case "cgl":
-						$archives[] = "desuarchive.org";
-						$archives[] = "warosu.org";
-						break;
-					
-					case "f":
-						$archives[] = "archive.4plebs.org";
-						break;
-					
-					case "n":
-						break;
-					
-					case "jp":
-						$archives[] = "warosu.org";
-						break;
-					
-					case "vt":
-						$archives[] = "warosu.org";
-						break;
-					
-					case "v":
-						$archives[] = "arch.b4k.co";
-						break;
-					
-					case "vg":
-						$archives[] = "arch.b4k.co";
-						break;
-					
-					case "vm":
-						$archives[] = "arch.b4k.co";
-						break;
-					
-					case "vmg":
-						$archives[] = "arch.b4k.co";
-						break;
-					
-					case "vp":
-						$archives[] = "arch.b4k.co";
-						break;
-					
-					case "vr":
-						$archives[] = "desuarchive.org";
-						$archives[] = "warosu.org";
-						break;
-					
-					case "vrpg":
-						$archives[] = "arch.b4k.co";
-						break;
-					
-					case "vst":
-						$archives[] = "arch.b4k.co";
-						break;
-					
-					case "co":
-						$archives[] = "desuarchive.org";
-						break;
-					
-					case "g":
-						$archives[] = "desuarchive.org";
-						$archives[] = "arch.b4k.co";
-						break;
-					
-					case "tv":
-						$archives[] = "archive.4plebs.org";
-						break;
-					
-					case "k":
-						$archives[] = "desuarchive.org";
-						break;
-					
-					case "o":
-						$archives[] = "archive.4plebs.org";
-						break;
-					
-					case "an":
-						$archives[] = "desuarchive.org";
-						break;
-					
-					case "tg":
-						$archives[] = "desuarchive.org";
-						$archives[] = "archive.4plebs.org";
-						break;
-					
-					case "sp":
-						$archives[] = "archive.4plebs.org";
-						break;
-					
-					case "xs":
-						$archives[] = "eientei.xyz";
-						break;
-					
-					case "pw":
-						break;
-					
-					case "sci":
-						$archives[] = "warosu.org";
-						$archives[] = "eientei.xyz";
-						break;
-					
-					case "his":
-						$archives[] = "desuarchive.org";
-						break;
-					
-					case "int":
-						$archives[] = "desuarchive.org";
-						break;
-					
-					case "out":
-						break;
-					
-					case "toy":
-						break;
-					
-					case "i":
-						$archives[] = "archiveofsins.com";
-						$archives[] = "eientei.xyz";
-						break;
-					
-					case "po":
-						break;
-					
-					case "p":
-						break;
-					
-					case "ck":
-						$archives[] = "warosu.org";
-						break;
-					
-					case "ic":
-						$archives[] = "warosu.org";
-						break;
-					
-					case "wg":
-						break;
-					
-					case "lit":
-						$archives[] = "warosu.org";
-						break;
-					
-					case "mu":
-						$archives[] = "desuarchive.org";
-						break;
-					
-					case "fa":
-						$archives[] = "warosu.org";
-						break;
-					
-					case "3":
-						$archives[] = "warosu.org";
-						$archives[] = "eientei.xyz";
-						break;
-					
-					case "gd":
-						break;
-					
-					case "diy":
-						$archives[] = "warosu.org";
-						break;
-					
-					case "wsg":
-						$archives[] = "desuarchive.org";
-						break;
-					
-					case "qst":
-						break;
-					
-					case "biz":
-						$archives[] = "warosu.org";
-						break;
-					
-					case "trv":
-						$archives[] = "archive.4plebs.org";
-						break;
-					
-					case "fit":
-						$archives[] = "desuarchive.org";
-						break;
-					
-					case "x":
-						$archives[] = "archive.4plebs.org";
-						break;
-					
-					case "adv":
-						$archives[] = "archive.4plebs.org";
-						break;
-					
-					case "lgbt":
-						$archives[] = "archiveofsins.com";
-						break;
-					
-					case "mlp":
-						$archives[] = "desuarchive.org";
-						$archives[] = "arch.b4k.co";
-						break;
-					
-					case "news":
-						break;
-					
-					case "wsr":
-						break;
-					
-					case "vip":
-						break;
-					
-					case "b":
-						$archives[] = "thebarchive.com";
-						break;
-					
-					case "r9k":
-						$archives[] = "desuarchive.org";
-						break;
-					
-					case "pol":
-						$archives[] = "archive.4plebs.org";
-						break;
-					
-					case "bant":
-						$archives[] = "thebarchive.com";
-						break;
-					
-					case "soc":
-						$archives[] = "archiveofsins.com";
-						break;
-					
-					case "s4s":
-						$archives[] = "archive.4plebs.org";
-						break;
-					
-					case "s":
-						$archives[] = "archiveofsins.com";
-						break;
-					
-					case "hc":
-						$archives[] = "archiveofsins.com";
-						break;
-					
-					case "hm":
-						$archives[] = "archiveofsins.com";
-						break;
-					
-					case "h":
-						$archives[] = "archiveofsins.com";
-						break;
-					
-					case "e":
-						break;
-					
-					case "u":
-						$archives[] = "archiveofsins.com";
-						break;
-					
-					case "d":
-						$archives[] = "desuarchive.org";
-						break;
-					
-					case "t":
-						$archives[] = "archiveofsins.com";
-						break;
-					
-					case "hr":
-						$archives[] = "archive.4plebs.org";
-						break;
-					
-					case "gif":
-						break;
-					
-					case "aco":
-						$archives[] = "desuarchive.org";
-						break;
-					
-					case "r":
-						$archives[] = "archiveofsins.com";
-						break;
-					
-					default:
-						$isboard = false;
-						break;
-				}
-				
-				if($isboard === true){
-					
-					$archives[] = "archived.moe";
-				}
-				
-				$trail = "";
-				
-				if(
-					isset($path[2]) &&
-					isset($path[3]) &&
-					$path[2] == "thread"
-				){
-					
-					$trail .= "/" . $path[1] . "/thread/" . $path[3];
-				}elseif($isboard){
-					
-					$trail = "/" . $path[1] . "/";
-				}
-				
-				for($i=0; $i<count($archives); $i++){
-					
-					$payload .=
-						'<a href="https://' . $archives[$i] . $trail . '" class="list" target="_BLANK">' .
-							'<img src="/favicon?s=https://' . $archives[$i] . '" alt="' . $archives[$i][0] . $archives[$i][1] . '">' .
-							$archives[$i] .
-						'</a>';
+						case "a":
+							$archives[] = "desuarchive.org";
+							break;
+						
+						case "c":
+							$archives[] = "desuarchive.org";
+							break;
+						
+						case "w":
+							break;
+						
+						case "m":
+							$archives[] = "desuarchive.org";
+							break;
+						
+						case "cgl":
+							$archives[] = "desuarchive.org";
+							$archives[] = "warosu.org";
+							break;
+						
+						case "f":
+							$archives[] = "archive.4plebs.org";
+							break;
+						
+						case "n":
+							break;
+						
+						case "jp":
+							$archives[] = "warosu.org";
+							break;
+						
+						case "vt":
+							$archives[] = "warosu.org";
+							break;
+						
+						case "v":
+							$archives[] = "arch.b4k.co";
+							break;
+						
+						case "vg":
+							$archives[] = "arch.b4k.co";
+							break;
+						
+						case "vm":
+							$archives[] = "arch.b4k.co";
+							break;
+						
+						case "vmg":
+							$archives[] = "arch.b4k.co";
+							break;
+						
+						case "vp":
+							$archives[] = "arch.b4k.co";
+							break;
+						
+						case "vr":
+							$archives[] = "desuarchive.org";
+							$archives[] = "warosu.org";
+							break;
+						
+						case "vrpg":
+							$archives[] = "arch.b4k.co";
+							break;
+						
+						case "vst":
+							$archives[] = "arch.b4k.co";
+							break;
+						
+						case "co":
+							$archives[] = "desuarchive.org";
+							break;
+						
+						case "g":
+							$archives[] = "desuarchive.org";
+							$archives[] = "arch.b4k.co";
+							break;
+						
+						case "tv":
+							$archives[] = "archive.4plebs.org";
+							break;
+						
+						case "k":
+							$archives[] = "desuarchive.org";
+							break;
+						
+						case "o":
+							$archives[] = "archive.4plebs.org";
+							break;
+						
+						case "an":
+							$archives[] = "desuarchive.org";
+							break;
+						
+						case "tg":
+							$archives[] = "desuarchive.org";
+							$archives[] = "archive.4plebs.org";
+							break;
+						
+						case "sp":
+							$archives[] = "archive.4plebs.org";
+							break;
+						
+						case "xs":
+							$archives[] = "eientei.xyz";
+							break;
+						
+						case "pw":
+							break;
+						
+						case "sci":
+							$archives[] = "warosu.org";
+							$archives[] = "eientei.xyz";
+							break;
+						
+						case "his":
+							$archives[] = "desuarchive.org";
+							break;
+						
+						case "int":
+							$archives[] = "desuarchive.org";
+							break;
+						
+						case "out":
+							break;
+						
+						case "toy":
+							break;
+						
+						case "i":
+							$archives[] = "archiveofsins.com";
+							$archives[] = "eientei.xyz";
+							break;
+						
+						case "po":
+							break;
+						
+						case "p":
+							break;
+						
+						case "ck":
+							$archives[] = "warosu.org";
+							break;
+						
+						case "ic":
+							$archives[] = "warosu.org";
+							break;
+						
+						case "wg":
+							break;
+						
+						case "lit":
+							$archives[] = "warosu.org";
+							break;
+						
+						case "mu":
+							$archives[] = "desuarchive.org";
+							break;
+						
+						case "fa":
+							$archives[] = "warosu.org";
+							break;
+						
+						case "3":
+							$archives[] = "warosu.org";
+							$archives[] = "eientei.xyz";
+							break;
+						
+						case "gd":
+							break;
+						
+						case "diy":
+							$archives[] = "warosu.org";
+							break;
+						
+						case "wsg":
+							$archives[] = "desuarchive.org";
+							break;
+						
+						case "qst":
+							break;
+						
+						case "biz":
+							$archives[] = "warosu.org";
+							break;
+						
+						case "trv":
+							$archives[] = "archive.4plebs.org";
+							break;
+						
+						case "fit":
+							$archives[] = "desuarchive.org";
+							break;
+						
+						case "x":
+							$archives[] = "archive.4plebs.org";
+							break;
+						
+						case "adv":
+							$archives[] = "archive.4plebs.org";
+							break;
+						
+						case "lgbt":
+							$archives[] = "archiveofsins.com";
+							break;
+						
+						case "mlp":
+							$archives[] = "desuarchive.org";
+							$archives[] = "arch.b4k.co";
+							break;
+						
+						case "news":
+							break;
+						
+						case "wsr":
+							break;
+						
+						case "vip":
+							break;
+						
+						case "b":
+							$archives[] = "thebarchive.com";
+							break;
+						
+						case "r9k":
+							$archives[] = "desuarchive.org";
+							break;
+						
+						case "pol":
+							$archives[] = "archive.4plebs.org";
+							break;
+						
+						case "bant":
+							$archives[] = "thebarchive.com";
+							break;
+						
+						case "soc":
+							$archives[] = "archiveofsins.com";
+							break;
+						
+						case "s4s":
+							$archives[] = "archive.4plebs.org";
+							break;
+						
+						case "s":
+							$archives[] = "archiveofsins.com";
+							break;
+						
+						case "hc":
+							$archives[] = "archiveofsins.com";
+							break;
+						
+						case "hm":
+							$archives[] = "archiveofsins.com";
+							break;
+						
+						case "h":
+							$archives[] = "archiveofsins.com";
+							break;
+						
+						case "e":
+							break;
+						
+						case "u":
+							$archives[] = "archiveofsins.com";
+							break;
+						
+						case "d":
+							$archives[] = "desuarchive.org";
+							break;
+						
+						case "t":
+							$archives[] = "archiveofsins.com";
+							break;
+						
+						case "hr":
+							$archives[] = "archive.4plebs.org";
+							break;
+						
+						case "gif":
+							break;
+						
+						case "aco":
+							$archives[] = "desuarchive.org";
+							break;
+						
+						case "r":
+							$archives[] = "archiveofsins.com";
+							break;
+						
+						default:
+							$isboard = false;
+							break;
+					}
+					
+					if($isboard === true){
+						
+						$archives[] = "archived.moe";
+					}
+					
+					$trail = "";
+					
+					if(
+						isset($path[2]) &&
+						isset($path[3]) &&
+						$path[2] == "thread"
+					){
+						
+						$trail .= "/" . $path[1] . "/thread/" . $path[3];
+					}elseif($isboard){
+						
+						$trail = "/" . $path[1] . "/";
+					}
+					
+					for($i=0; $i<count($archives); $i++){
+						
+						$payload .=
+							'<a href="https://' . $archives[$i] . $trail . '" class="list" target="_BLANK">' .
+								'<img src="/favicon?s=https://' . $archives[$i] . '" alt="' . $archives[$i][0] . $archives[$i][1] . '">' .
+								$archives[$i] .
+							'</a>';
+					}
 				}
 			}
+			
+			$payload .=
+					'<a href="https://web.archive.org/web/' . $urlencode . '" class="list" target="_BLANK"><img src="/favicon?s=https://archive.org" alt="ar">Archive.org</a>' .
+					'<a href="https://archive.ph/newest/' . htmlspecialchars($link) . '" class="list" target="_BLANK"><img src="/favicon?s=https://archive.is" alt="ar">Archive.is</a>' .
+					'<a href="https://ghostarchive.org/search?term=' . $urlencode . '" class="list" target="_BLANK"><img src="/favicon?s=https://ghostarchive.org" alt="gh">Ghostarchive</a>' .
+					'<a href="https://arquivo.pt/wayback/' . htmlspecialchars($link) . '" class="list" target="_BLANK"><img src="/favicon?s=https://arquivo.pt" alt="ar">Arquivo.pt</a>' .
+					'<a href="https://www.bing.com/search?q=url%3A' . $urlencode . '" class="list" target="_BLANK"><img src="/favicon?s=https://bing.com" alt="bi">Bing cache</a>' .
+					'<a href="https://megalodon.jp/?url=' . $urlencode . '" class="list" target="_BLANK"><img src="/favicon?s=https://megalodon.jp" alt="me">Megalodon</a>' .
+				'</div>';
 		}
-		
-		$payload .=
-				'<a href="https://web.archive.org/web/' . $urlencode . '" class="list" target="_BLANK"><img src="/favicon?s=https://archive.org" alt="ar">Archive.org</a>' .
-				'<a href="https://archive.ph/newest/' . htmlspecialchars($link) . '" class="list" target="_BLANK"><img src="/favicon?s=https://archive.is" alt="ar">Archive.is</a>' .
-				'<a href="https://ghostarchive.org/search?term=' . $urlencode . '" class="list" target="_BLANK"><img src="/favicon?s=https://ghostarchive.org" alt="gh">Ghostarchive</a>' .
-				'<a href="https://arquivo.pt/wayback/' . htmlspecialchars($link) . '" class="list" target="_BLANK"><img src="/favicon?s=https://arquivo.pt" alt="ar">Arquivo.pt</a>' .
-				'<a href="https://www.bing.com/search?q=url%3A' . $urlencode . '" class="list" target="_BLANK"><img src="/favicon?s=https://bing.com" alt="bi">Bing cache</a>' .
-				'<a href="https://megalodon.jp/?url=' . $urlencode . '" class="list" target="_BLANK"><img src="/favicon?s=https://megalodon.jp" alt="me">Megalodon</a>' .
-			'</div>';
 		
 		/*
 			Draw link
@@ -862,10 +874,12 @@ class frontend{
 		}
 		
 		// merge https://site together
-		$parts = [
-			$parts[0] . $parts[1] . '//' . $parts[2],
-			...array_slice($parts, 3, count($parts) - 1)
-		];
+		if(isset($host["host"])){
+			$parts = [
+				$parts[0] . $parts[1] . '//' . $parts[2],
+				...array_slice($parts, 3, count($parts) - 1)
+			];
+		}
 		
 		$c = count($parts);
 		for($i=0; $i<$c; $i++){
@@ -1034,7 +1048,8 @@ class frontend{
 				$filters["scraper"] = [
 					"display" => "Scraper",
 					"option" => [
-						"sc" => "SoundCloud"
+						"sc" => "SoundCloud",
+						"swisscows" => "Swisscows (SoundCloud)"
 						//"spotify" => "Spotify"
 					]
 				];
