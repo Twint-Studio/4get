@@ -36,7 +36,7 @@ class resolver{
 		
 		try{
 			
-			include "resolver/{$scraper}.php";
+			include "resolve/{$scraper}.php";
 			$resolver = new $scraper();
 			$link = $resolver->resolve($target);
 			
