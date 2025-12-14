@@ -135,6 +135,8 @@ class sc{
 			
 			$type = $get["type"];
 			$proxy = $this->backend->get_ip();
+			
+			// token is not tied to an IP address
 			$token = $this->get_token($proxy);
 			
 			switch($type){
@@ -247,13 +249,30 @@ class sc{
 		fclose($handle);
 		*/
 		
+		$this->fuckhtml->load($json);
+		
+		// detect for cloudfront error
+		$title =
+			$this->fuckhtml
+			->getElementsByTagName(
+				"title"
+			);
+		
+		if(
+			count($title) !== 0 &&
+			str_contains($title[0]["innerHTML"], "The request could not be satisfied")
+		){
+			
+			throw new Exception("Ratelimited by Cloudfront, add some working proxies");
+		}
+		
 		$json = json_decode($json, true);
 		
 		if($json === null){
 			
 			if($last_attempt === true){
 				
-				throw new Exception("Fetched an invalid token (please report!!)");
+				throw new Exception("Fetched an invalid token");
 			}
 			
 			// token might've expired, get a new one and re-try search
