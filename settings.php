@@ -388,11 +388,15 @@ $settings = [
 					[
 						"value" => "sc",
 						"text" => "SoundCloud"
-					]//,
-					//[
-					//	"value" => "spotify",
-					//	"text" => "Spotify"
-					//]
+					],
+					[
+						"value" => "swisscows",
+						"text" => "Swisscows"
+					]
+					/*[
+						"value" => "spotify",
+						"text" => "Spotify"
+					]*/
 				]
 			]
 		]

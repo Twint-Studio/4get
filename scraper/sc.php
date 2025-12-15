@@ -135,6 +135,8 @@ class sc{
 			
 			$type = $get["type"];
 			$proxy = $this->backend->get_ip();
+			
+			// token is not tied to an IP address
 			$token = $this->get_token($proxy);
 			
 			switch($type){
@@ -247,17 +249,34 @@ class sc{
 		fclose($handle);
 		*/
 		
+		$this->fuckhtml->load($json);
+		
+		// detect for cloudfront error
+		$title =
+			$this->fuckhtml
+			->getElementsByTagName(
+				"title"
+			);
+		
+		if(
+			count($title) !== 0 &&
+			str_contains($title[0]["innerHTML"], "The request could not be satisfied")
+		){
+			
+			throw new Exception("Ratelimited by Cloudfront, add some working proxies");
+		}
+		
 		$json = json_decode($json, true);
 		
 		if($json === null){
 			
 			if($last_attempt === true){
 				
-				throw new Exception("Fetched an invalid token (please report!!)");
+				throw new Exception("Fetched an invalid token");
 			}
 			
 			// token might've expired, get a new one and re-try search
-			$this->get_token($proxy);
+			$token = $this->get_token($proxy, true);
 			return $this->music($get, true);
 		}
 		
@@ -378,7 +397,12 @@ class sc{
 					break;
 				
 				case "track":
-					if(stripos($item["monetization_model"], "TIER") === false){
+					$stream = [
+						"endpoint" => null,
+						"url" => null
+					];
+					
+					/*if(stripos($item["monetization_model"], "TIER") === false){
 						
 						$stream = [
 							"endpoint" => "sc",
@@ -394,7 +418,7 @@ class sc{
 							"endpoint" => null,
 							"url" => null
 						];
-					}
+					}*/
 					
 					// parse track
 					$out["song"][] = [
@@ -422,11 +446,14 @@ class sc{
 		return $out;
 	}
 	
-	public function get_token($proxy){
+	public function get_token($proxy, $force_refresh = false){
 		
 		$token = apcu_fetch("sc_token");
 		
-		if($token !== false){
+		if(
+			$token !== false &&
+			$force_refresh === false
+		){
 			
 			return $token;
 		}
