@@ -20,20 +20,20 @@ class bangs {
 				'subs' => []
 			];
 			
-			// Build sub-bangs map
+			// Build sub-bangs map (convert to lowercase for case-insensitive matching)
 			if (isset($engine['sb']) && is_array($engine['sb'])) {
 				foreach ($engine['sb'] as $sub) {
-					$engine_data['subs'][$sub['b']] = $sub;
+					$engine_data['subs'][strtolower($sub['b'])] = $sub;
 				}
 			}
 			
-			// Map primary bang
-			$this->bang_map[$engine['t']] = $engine_data;
+			// Map primary bang (convert to lowercase for case-insensitive matching)
+			$this->bang_map[strtolower($engine['t'])] = $engine_data;
 			
 			// Map alternate bangs (ts field)
 			if (isset($engine['ts']) && is_array($engine['ts'])) {
 				foreach ($engine['ts'] as $alt_bang) {
-					$this->bang_map[$alt_bang] = $engine_data;
+					$this->bang_map[strtolower($alt_bang)] = $engine_data;
 				}
 			}
 		}
@@ -56,6 +56,7 @@ class bangs {
 		for ($i = 0; $i < count($words); $i++) {
 			$word = $words[$i];
 			$name = preg_replace('/^!|!$/', '', $word);
+			$name_lower = strtolower($name);
 			
 			// Check if word is a bang (starts or ends with !)
 			if (!preg_match('/^!|!$/', $word)) {
@@ -64,8 +65,8 @@ class bangs {
 			}
 			
 			// If no primary bang set yet and this is a valid bang
-			if (!$primary && isset($this->bang_map[$name])) {
-				$primary = $name;
+			if (!$primary && isset($this->bang_map[$name_lower])) {
+				$primary = $name_lower;
 				continue;
 			}
 			
@@ -73,11 +74,11 @@ class bangs {
 			if ($primary) {
 				$engine = $this->bang_map[$primary];
 				
-				if (!isset($engine['subs'][$name])) {
+				if (!isset($engine['subs'][$name_lower])) {
 					continue;
 				}
 				
-				$sub = $engine['subs'][$name];
+				$sub = $engine['subs'][$name_lower];
 				$value = '';
 				
 				// Determine how to parse the sub-bang value
@@ -98,7 +99,7 @@ class bangs {
 					$value = isset($sub['v']) ? $sub['v'] : (isset($sub['d']) ? $sub['d'] : '');
 				}
 				
-				$params[$name] = [
+				$params[$name_lower] = [
 					'value' => $value,
 					'url_param' => isset($sub['u']) ? $sub['u'] : null
 				];
@@ -175,7 +176,7 @@ class bangs {
 		foreach ($words as $word) {
 			if (preg_match('/^!|!$/', $word)) {
 				$name = preg_replace('/^!|!$/', '', $word);
-				if (isset($this->bang_map[$name])) {
+				if (isset($this->bang_map[strtolower($name)])) {
 					return true;
 				}
 			}
@@ -197,8 +198,8 @@ class bangs {
 		foreach ($words as $word) {
 			if (preg_match('/^!|!$/', $word)) {
 				$name = preg_replace('/^!|!$/', '', $word);
-				if (isset($this->bang_map[$name])) {
-					return $name;
+				if (isset($this->bang_map[strtolower($name)])) {
+					return strtolower($name);
 				}
 			}
 		}
