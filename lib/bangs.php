@@ -17,7 +17,8 @@ class bangs {
 			$engine_data = [
 				'url' => $engine['u'],
 				'domain' => $engine['d'],
-				'subs' => []
+				'subs' => [],
+				'fmt' => isset($engine['fmt']) ? $engine['fmt'] : []
 			];
 			
 			// Build sub-bangs map (convert to lowercase for case-insensitive matching)
@@ -150,15 +151,22 @@ class bangs {
 		
 		$final_url .= $fragment;
 		
+		// Encode search string
+		$encoded = rawurlencode($search_string);
+
+		// If engine requests spaces become plus signs, apply that
+		if (isset($engine['fmt']) && is_array($engine['fmt']) && in_array('url_encode_space_to_plus', $engine['fmt'])) {
+			$encoded = str_replace('%20', '+', $encoded);
+		}
+
 		// Replace placeholder with actual search term
-		$final_url = str_replace(
-			'PLACEHOLDER_SEARCH', 
-			rawurlencode($search_string),
-			$final_url
-		);
-		
-		// Fix double-encoded slashes if needed
-		$final_url = str_replace('%2F', '/', $final_url);
+		$final_url = str_replace('PLACEHOLDER_SEARCH', $encoded, $final_url);
+
+		// Unless engine explicitly requests preserving encoded slashes,
+		// convert %2F back to literal '/' (matches previous behaviour)
+		if (!(isset($engine['fmt']) && is_array($engine['fmt']) && in_array('url_encode_placeholder', $engine['fmt']))) {
+			$final_url = str_replace('%2F', '/', $final_url);
+		}
 		
 		return $final_url;
 	}
