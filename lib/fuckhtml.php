@@ -13,7 +13,7 @@ class fuckhtml{
 		
 		if(is_array($html)){
 			
-			if(!isset($html["innerHTML"])){
+			if(!array_key_exists("innerHTML", $html)){
 				
 				throw new Exception("(load) Supplied array doesn't contain an innerHTML index");
 			}
@@ -339,7 +339,7 @@ class fuckhtml{
 		
 		if(is_array($html)){
 			
-			if(!isset($html["innerHTML"])){
+			if(!array_key_exists("innerHTML", $html)){
 				
 				throw new Exception("(getTextContent) Supplied array doesn't contain an innerHTML index");
 			}
