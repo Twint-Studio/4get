@@ -151,7 +151,7 @@ class sc{
 						"limit" => 20,
 						"offset" => 0,
 						"linked_partitioning" => 1,
-						"app_version" => 1713542117,
+						"app_version" => 1769170554,
 						"app_locale" => "en"
 					];
 					break;
@@ -166,7 +166,7 @@ class sc{
 						"limit" => 20,
 						"offset" => 0,
 						"linked_partitioning" => 1,
-						"app_version" => 1713542117,
+						"app_version" => 1769170554,
 						"app_locale" => "en"
 					];
 					break;
@@ -181,7 +181,7 @@ class sc{
 						"limit" => 20,
 						"offset" => 0,
 						"linked_partitioning" => 1,
-						"app_version" => 1713542117,
+						"app_version" => 1769170554,
 						"app_locale" => "en"
 					];
 					break;
@@ -196,7 +196,7 @@ class sc{
 						"limit" => 20,
 						"offset" => 0,
 						"linked_partitioning" => 1,
-						"app_version" => 1713542117,
+						"app_version" => 1769170554,
 						"app_locale" => "en"
 					];
 					break;
@@ -211,7 +211,7 @@ class sc{
 						"limit" => 20,
 						"offset" => 0,
 						"linked_partitioning" => 1,
-						"app_version" => 1713542117,
+						"app_version" => 1769170554,
 						"app_locale" => "en"
 					];
 					break;
@@ -227,7 +227,7 @@ class sc{
 						"limit" => 20,
 						"offset" => 0,
 						"linked_partitioning" => 1,
-						"app_version" => 1713542117,
+						"app_version" => 1769170554,
 						"app_locale" => "en"
 					];
 					break;
@@ -458,7 +458,7 @@ class sc{
 			return $token;
 		}
 		
-		// search through all javascript components on the main page
+		// get token from main page
 		try{
 			$html =
 				$this->get(
@@ -474,49 +474,44 @@ class sc{
 		
 		$this->fuckhtml->load($html);
 		
-		$scripts =
-			$this->fuckhtml
-			->getElementsByTagName(
-				"script"
+		$json =
+			preg_split(
+				'/window.__sc_hydration ?= ?/',
+				$html
 			);
 		
-		foreach($scripts as $script){
+		if(!isset($json[1])){
+			
+			throw new Exception("Failed to find JSON containing token");
+		}
+		
+		$json =
+			json_decode(
+				$this->fuckhtml
+				->extract_json(
+					$json[1]
+				),
+				true
+			);
+		
+		if($json === null){
+			
+			throw new Exception("Failed to decode JSON containing token");
+		}
+		
+		foreach($json as $item){
 			
 			if(
-				!isset($script["attributes"]["src"]) ||
-				strpos($script["attributes"]["src"], "sndcdn.com") === false
+				isset($item["hydratable"]) &&
+				isset($item["data"]["id"])
 			){
 				
-				continue;
-			}
-			
-			try{
-				$js =
-					$this->get(
-						$proxy,
-						$script["attributes"]["src"],
-						[]
-					);
-			}catch(Exception $error){
-				
-				throw new Exception("Failed to fetch search token");
-			}
-			
-			preg_match(
-				'/client_id=([^"]+)/',
-				$js,
-				$token
-			);
-			
-			if(isset($token[1])){
-				
-				apcu_store("sc_token", $token[1]);
-				return $token[1];
-				break;
+				apcu_store("sc_token", $item["data"]["id"]);
+				return $item["data"]["id"];
 			}
 		}
 		
-		throw new Exception("Did not find a Soundcloud token in the Javascript blobs");
+		throw new Exception("Failed to find a valid token");
 	}
 	
 	private function limitstrlen($text){
