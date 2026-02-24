@@ -196,7 +196,7 @@ class marginalia{
 		return $data;
 	}
 	
-	public function web($get){
+	public function web($get, $ss = ""){
 		
 		$search = [$get["s"]];
 		if(strlen($get["s"]) === 0){
@@ -390,28 +390,35 @@ class marginalia{
 			}
 			
 		}else{
-			$params = [
-				"query" => $search
-			];
 			
-			foreach(["adtech", "recent", "intitle"] as $v){
+			if($ss == ""){
 				
-				if($get[$v] == "yes"){
+				$params = [
+					"query" => $search
+				];
+				
+				foreach(["adtech", "recent", "intitle"] as $v){
 					
-					switch($v){
+					if($get[$v] == "yes"){
 						
-						case "adtech": $params["adtech"] = "reduce"; break;
-						case "recent": $params["recent"] = "recent"; break;
-						case "adtech": $params["searchTitle"] = "title"; break;
+						switch($v){
+							
+							case "adtech": $params["adtech"] = "reduce"; break;
+							case "recent": $params["recent"] = "recent"; break;
+							case "adtech": $params["searchTitle"] = "title"; break;
+						}
 					}
 				}
+			}else{
+				
+				$params = [];
 			}
 			
 			try{
 				$html =
 					$this->get(
 						$proxy,
-						"https://old-search.marginalia.nu/search",
+						"https://old-search.marginalia.nu/search" . $ss,
 						$params,
 						//$anubis_key
 					);
@@ -422,6 +429,32 @@ class marginalia{
 		}
 		
 		$this->fuckhtml->load($html);
+		
+		// detect meta redirect
+		// <html lang="en-US"> <head> <title>Error</title> <link rel="stylesheet" href="/serp.css"> <meta http-equiv="refresh" content="3; URL='?query=asmr&sst=S-873f5da96e8b60'"> </head> <body> <div class="infobox"> <h1>Wait For A Moment</h1> <p>The search engine is currently barraged by queries from bots</p> <p>Please wait for <b id="countdown" data-tr="3">3</b> seconds. If your browser supports it, it will refresh on its own. Otherwise, you can use <a href="?query&#x3D;asmr&amp;sst&#x3D;S-873f5da96e8b60">this link</a> to manually proceed. </div> </body> <script lang="javascript"> window.setInterval(()=>{ const cd = document.getElementById('countdown'); var tr = cd.getAttribute('data-tr'); tr--; cd.setAttribute('data-tr', tr); cd.innerHTML=tr; }, 1000); </script> </html>
+		
+		$metas =
+			$this->fuckhtml
+			->getElementsByAttributeValue(
+				"http-equiv",
+				"refresh",
+				"meta"
+			);
+		
+		if(count($metas) !== 0){
+			
+			preg_match(
+				'/^([0-9]+).*URL=\'([^\']*)/',
+				$this->fuckhtml
+				->getTextContent(
+					$metas[0]["attributes"]["content"]
+				),
+				$rules
+			);
+			
+			sleep((int)$rules[1]);
+			return $this->web($get, $rules[2]);
+		}
 		
 		$sections =
 			$this->fuckhtml
