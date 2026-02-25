@@ -196,7 +196,7 @@ class marginalia{
 		return $data;
 	}
 	
-	public function web($get){
+	public function web($get, $ss = ""){
 		
 		$search = [$get["s"]];
 		if(strlen($get["s"]) === 0){
@@ -390,28 +390,35 @@ class marginalia{
 			}
 			
 		}else{
-			$params = [
-				"query" => $search
-			];
 			
-			foreach(["adtech", "recent", "intitle"] as $v){
+			if($ss == ""){
 				
-				if($get[$v] == "yes"){
+				$params = [
+					"query" => $search
+				];
+				
+				foreach(["adtech", "recent", "intitle"] as $v){
 					
-					switch($v){
+					if($get[$v] == "yes"){
 						
-						case "adtech": $params["adtech"] = "reduce"; break;
-						case "recent": $params["recent"] = "recent"; break;
-						case "adtech": $params["searchTitle"] = "title"; break;
+						switch($v){
+							
+							case "adtech": $params["adtech"] = "reduce"; break;
+							case "recent": $params["recent"] = "recent"; break;
+							case "adtech": $params["searchTitle"] = "title"; break;
+						}
 					}
 				}
+			}else{
+				
+				$params = [];
 			}
 			
 			try{
 				$html =
 					$this->get(
 						$proxy,
-						"https://old-search.marginalia.nu/search",
+						"https://old-search.marginalia.nu/search" . $ss,
 						$params,
 						//$anubis_key
 					);
@@ -422,6 +429,66 @@ class marginalia{
 		}
 		
 		$this->fuckhtml->load($html);
+		
+		// detect meta redirect
+		$title =
+			$this->fuckhtml
+			->getElementsByTagName(
+				"title"
+			);
+		
+		if(
+			count($title) !== 0 &&
+			$this->fuckhtml
+			->getTextContent(
+				$title[0]
+			) == "Error"
+		){
+			
+			// redirect detected
+			
+			// get timeout
+			$timeout =
+				$this->fuckhtml
+				->getElementById(
+					"countdown",
+					"b"
+				);
+			
+			if(count($timeout) === null){
+				
+				throw new Exception("Failed to find timeout value");
+			}
+			
+			$timeout =
+				$this->fuckhtml
+				->getTextContent(
+					$timeout
+				);
+			
+			preg_match(
+				'/location\.replace\(\'([^\']+)\'\)/',
+				$html,
+				$redirect
+			);
+			
+			if(!isset($redirect[1])){
+				
+				throw new Exception("Failed to grep redirect value");
+			}
+			
+			$one = 1;
+			$redirect =
+				str_replace(
+					"/search",
+					"",
+					$redirect[1],
+					$one
+				);
+			
+			sleep((int)$timeout);
+			return $this->web($get, $redirect);
+		}
 		
 		$sections =
 			$this->fuckhtml
