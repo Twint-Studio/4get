@@ -623,7 +623,8 @@ class google{
 			
 			$params = [
 				"q" => $search,
-				"hl" => "en"
+				"hl" => "en",
+				"udm" => 14
 			];
 			
 			// country
