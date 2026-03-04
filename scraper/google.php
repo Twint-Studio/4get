@@ -520,7 +520,7 @@ class google{
 		if($alt_ua === true){
 			
 			curl_setopt($curlproc, CURLOPT_HTTPHEADER, [
-				"User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows CE; PPC; 240x320) Opera 8.65 [nl]",
+				"User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 26_0_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) GSA/406.0.862495628 Mobile/15E148 Safari/604.1",
 				"Accept: text/html, application/xml;q=0.9, */*;q=0.8",
 				"Accept-Language: nl,en;q=0.8",
 				"Accept-Encoding: gzip, deflate",
@@ -573,10 +573,8 @@ class google{
 	
 	public function web($get){
 		
-		// this is going to break soon. I wont scrape the answers simply cause its not worth my time.
-		// If only their API wasn't such dogshit maybe I wouldnt need to fuck with this. this isn't
-		// just a rant. I know a Google engineer is reading this, give me real fucking results
-		// you worthless sacks of shit
+		// it broke again. lasted 3 months
+		// lets hope for another solid 3 month
 		
 		$out = [
 			"status" => "ok",
@@ -690,6 +688,7 @@ class google{
 				
 				throw new Exception("Failed to get HTML");
 			}
+			
 			//$html = file_get_contents("scraper/google.html");
 		}
 		
@@ -698,25 +697,22 @@ class google{
 		$this->detect_sorry();
 		$this->parsestyles();
 		
-		// iterate over results
-		$containers =
+		// get javascript images
+		$this->scrape_dimg($html);
+		$this->scrape_imagearr($html);
+		
+		// get next page
+		$npt =
 			$this->fuckhtml
-			->getElementsByClassName(
-				$this->getstyle([
-					"background-color" => "#fff",
-					"margin-bottom" => "10px",
-					"margin" => "0px 0px 8px",
-					"box-shadow" => "0 0 0 1px #ebedef"
-				])
+			->getElementsByAttributeValue(
+				"aria-label",
+				"More search results",
+				"a"
 			);
 		
-		foreach($containers as $container){
+		if(count($npt) === 0){
 			
-			$this->fuckhtml->load($container);
-			
-			//
-			// Probe for next page container
-			//
+			// maybe we have the npt object from 2nd page, probe for that
 			$npt =
 				$this->fuckhtml
 				->getElementsByAttributeValue(
@@ -724,282 +720,316 @@ class google{
 					"Next page",
 					"a"
 				);
+		}
+		
+		if(count($npt) !== 0){
 			
-			if(count($npt) !== 0){
-				
-				// found next page object
-				$out["npt"] =
-					$this->backend->store(
-						$this->fuckhtml
-						->getTextContent(
-							$npt[0]
-							["attributes"]
-							["href"]
-						),
-						"web",
-						$proxy
-					);
-				continue;
-			}
-			
-			//
-			// Probe for "did you mean" bullshit
-			//
-			$ddm =
-				$this->fuckhtml
-				->getElementsByClassName(
-					$this->getstyle([
-						"font-size" => "20px",
-						"font-weight" => "bold",
-						"line-height" => "26px",
-						"color" => "#1f1f1f",
-						"height" => "14px",
-						"padding" => "16px 14px 0px 14px",
-						"margin" => "0"
-					])
-				);
-			
-			if(
-				count($ddm) !== 0 &&
-				strtolower(
+			$out["npt"] =
+				$this->backend->store(
 					$this->fuckhtml
 					->getTextContent(
-						$ddm[0]
-					)
-				) == "people also search for"
-			){
-				
-				$as =
-					$this->fuckhtml
-					->getElementsByTagName("a");
-				
-				foreach($as as $a){
-					
-					$out["related"][] =
-						$this->fuckhtml
-						->getTextContent(
-							$a
-						);
-				}
-				continue;
-			}
-			
-			//
-			// Parse normal web results
-			//
-			
-			// probe for website ellipsis shit
-			$ellipsis =
-				$this->fuckhtml
-				->getElementsByClassName(
-					$this->getstyle([
-						"text-overflow" => "ellipsis",
-						"white-space" => "nowrap",
-						"overflow" => "hidden"
-					])
+						$npt[0]["attributes"]["href"]
+					),
+					"web",
+					$proxy
 				);
+		}
+		
+		// outer div is .MjjYud
+		// inner div always contain role="presentation"
+		
+		$outer =
+			$this->fuckhtml
+			->getElementsByClassName(
+				"MjjYud",
+				"div"
+			);
+		
+		// used later
+		$fancycontainer_class =
+			explode(
+				" ",
+				$this->getstyle([
+					"padding-top" => "4px",
+					"padding-bottom" => "calc(12px*1)"
+				]),
+				2
+			);
+		
+		if(count($fancycontainer_class) === 2){
 			
-			if(count($ellipsis) < 1){
-				
-				// should not happen
-				continue;
-			}
+			$fancycontainer_class = $fancycontainer_class[1];
+		}else{
 			
-			$title =
+			$fancycontainer_class = false;
+		}
+		
+		foreach($outer as $container){
+			
+			$this->fuckhtml->load($container);
+			
+			// probe for search result
+			$sprobe =
 				$this->fuckhtml
-				->getElementsByTagName(
-					"h3"
-				);
-			
-			if(count($title) === 0){
-				
-				// should not happen
-				continue;
-			}
-			
-			$title =
-				$this->fuckhtml
-				->getTextContent(
-					$title[0]
-				);
-			
-			// get URL
-			$as =
-				$this->fuckhtml
-				->getElementsByTagName(
+				->getElementsByAttributeValue(
+					"role",
+					"presentation",
 					"a"
 				);
 			
-			if(count($as) === 0){
+			if(count($sprobe) !== 0){
 				
-				// should not happen
-				continue;
-			}
-			
-			$link =
-				$this->unshiturl(
-					$as[0]
-					["attributes"]
-					["href"]
-				);
-			
-			// grep container separators
-			$separator =
-				$this->fuckhtml
-				->getElementsByClassName(
-					$this->getstyle([
-						"padding" => "16px 14px 12px"
-					])
-				);
-			
-			if(count($separator) < 2){
+				// we found a search result
 				
-				// should not happen
-				continue;
-			}
-			
-			$this->fuckhtml->load($separator[1]);
-			
-			$snippets =
-				$this->fuckhtml
-				->getElementsByClassName(
-					$this->getstyle([
-						"white-space" => "pre-line",
-						"word-wrap" => "break-word"
-					])
-				);
-			
-			if(count($snippets) < 2){
+				$title =
+					$this->fuckhtml
+					->getElementsByAttributeValue(
+						"role",
+						"link",
+						"div"
+					);
 				
-				// should not happen
-				continue;
-			}
-			
-			// get description
-			$description =
-				$this->fuckhtml
-				->getTextContent(
-					$snippets[1]
-				);
-			
-			// get date from description
-			$exp_description = explode(" · ", $description, 2);
-			$date = null;
-			
-			if(count($exp_description) === 1){
-				
-				$description = $exp_description[0];
-			}else{
-				
-				$date_probe = strtotime($exp_description[0]);
-				
-				if(
-					strlen($exp_description[0]) <= 17 &&
-					$date_probe !== false
-				){
+				if(count($title) === 0){
 					
-					$date = $date_probe;
-					$description = $exp_description[1];
+					// should not happen
+					continue;
 				}
-			}
-			
-			// get thumb
-			$thumb_probe =
-				$this->fuckhtml
-				->getElementsByTagName(
-					"img"
-				);
-			
-			// too lazy to fix this piece of shit
-			// will probably break soon anyways idgaf
-			/*
-			if(count($thumb_probe) === 0){
+				
+				$title =
+					$this->titledots(
+						$this->fuckhtml
+						->getTextContent(
+							$title[0]
+						)
+					);
+				
+				// get description
+				// as usual, theres a thousand fucking possible divs for this one
+				
+				// probe for youtube-like description
+				$description =
+					$this->fuckhtml
+					->getElementsByClassName( 
+						$this->getstyle([
+							"align-items" => "flex-start",
+							"display" => "flex",
+							"justify-content" => "center",
+							"padding" => "7px 12px",
+							"padding-right" => "0",
+							"padding-top" => "0"
+						]),
+						"div"
+					);
+				
+				$ratio = "16:9";
+				
+				if(count($description) === 0){
+					
+					// fail. find the one with the image on the right handside
+					$description =
+						$this->fuckhtml
+						->getElementsByAttributeValue(
+							"style",
+							"padding-top:2px;padding-right:8px;padding-left:16px;padding-bottom:12px",
+							"div"
+						);
+					
+					$ratio = "1:1";
+					
+					if(count($description) === 0){
+						
+						// fail. find the one that is used the most
+						$description =
+							$this->fuckhtml
+							->getElementsByAttributeValue(
+								"style",
+								"-webkit-line-clamp:3",
+								"div"
+							);
+						
+						if(count($description) === 0){
+							
+							// last fail. this one appears with divs that have prices
+							$description =
+								$this->fuckhtml
+								->getElementsByAttributeValue(
+									"style",
+									"max-width:100vw;grid-area:nke7rc;padding-top:2px;padding-right:8px;padding-left:16px;padding-bottom:6px",
+									"div"
+								);
+						}
+					}
+				}
+				
+				if(count($description) === 0){
+					
+					// should not happen but whatever
+					$description = null;
+				}else{
+					
+					$description =
+						$this->titledots(
+							$this->fuckhtml
+							->getTextContent(
+								$description[0]
+							)
+						);
+				}
+				
+				// probe for date
+				$desc2 = explode("—", $description, 2);
+				
+				$time = null;
+				
+				if(count($desc2) === 2){
+					
+					$time = strtotime($desc2[0]);
+					
+					if(
+						strlen($desc2[0]) < 16 &&
+						$time !== false
+					){
+						
+						$description = ltrim($desc2[1]);
+					}else{
+						
+						$time = null;
+					}
+				}
 				
 				$thumb = [
 					"ratio" => null,
-					"url" => null
+					"url" => null,
 				];
-			}else{
 				
-				$thumb = [
-					"ratio" => "1:1",
-					"url" =>
-						$this->getdimg(
-							$thumb_probe[0]
-							["attributes"]
-							["id"]
-						)
-				];
-			}*/
-			
-			$thumb = [
-				"ratio" => null,
-				"url" => null
-			];
-			
-			// get sublinks
-			$sublinks = [];
-			foreach($as as $a){
-				
-				$this->fuckhtml->load($a);
-				
-				$probe =
+				// get thumbnail
+				$images =
 					$this->fuckhtml
-					->getElementsByClassName(
-						$this->getstyle([
-							"color" => "#1558d6",
-							"font-size" => "14px",
-							"line-height" => "20px"
-						])
+					->getElementsByTagName(
+						"img"
 					);
 				
-				$url =
-					$this->unshiturl(
-						$a["attributes"]["href"]
-					);
-				
-				if(
-					preg_match(
-						'/^http/',
-						$url
-					)
-				){
+				foreach($images as $image){
 					
-					if(count($probe) !== 0){
+					if(isset($image["attributes"]["id"])){
 						
-						$sublinks[] = [
-							"title" =>
-								$this->titledots(
-									$this->fuckhtml
-									->getTextContent(
-										$probe[0]
-									)
-								),
-							"description" => null,
-							"date" => null,
-							"url" => $url
+						$thumb = [
+							"ratio" => $ratio,
+							"url" => $this->getdimg($image["attributes"]["id"])
 						];
 					}
 				}
+				
+				// get sublinks
+				$sublinks = [];
+				
+				// probe for the fancy version
+				if($fancycontainer_class !== false){
+					$fancycontainer =
+						$this->fuckhtml
+						->getElementsByClassName(
+							$fancycontainer_class,
+							"div"
+						);
+				}
+				
+				if(
+					$fancycontainer_class !== false &&
+					count($fancycontainer) !== 0
+				){
+					
+					$this->fuckhtml->load($fancycontainer[0]);
+					
+					$as =
+						$this->fuckhtml
+						->getElementsByTagName(
+							"a"
+						);
+					
+					foreach($as as $a){
+						
+						$sublinks[] = [
+							"title" =>
+								$this->fuckhtml
+								->getTextContent(
+									$a
+								),
+							"description" => null,
+							"date" => null,
+							"url" =>
+								$this->unshiturl(
+									$a["attributes"]["href"]
+								)
+						];
+					}
+				}
+				
+				$out["web"][] = [
+					"title" => $title,
+					"description" => $description,
+					"url" => $this->unshiturl($sprobe[0]["attributes"]["href"]),
+					"date" => $time,
+					"type" => "web",
+					"thumb" => $thumb,
+					"sublink" => $sublinks,
+					"table" => []
+				];
+				continue;
 			}
 			
-			$out["web"][] = [
-				"title" =>
-					$this->titledots(
-						$title
-					),
-				"description" =>
-					$this->titledots(
-						$description
-					),
-				"url" => $link,
-				"date" => $date,
-				"type" => "web",
-				"thumb" => $thumb,
-				"sublink" => $sublinks,
-				"table" => []
-			];
+			// probe for containers with a title header
+			$title_header =
+				$this->fuckhtml
+				->getElementsByClassName(
+					$this->getstyle([
+						"display" => "flex",
+						"flex-wrap" => "wrap",
+						"position" => "relative",
+						"padding" => "16px"
+					])
+				);
+			
+			if(count($title_header) !== 0){
+				
+				$title_header =
+					strtolower(
+						$this->fuckhtml
+						->getTextContent(
+							$title_header[0]
+						)
+					);
+				
+				switch($title_header){
+					
+					case "people also search for":
+						// get all related searches
+						$relateds =
+							$this->fuckhtml
+							->getElementsByClassName(
+								$this->getstyle([
+									"display" => "flex",
+									"height" => "100%",
+									"flex-direction" => "column",
+									"max-width" => "100%"
+								])
+							);
+						
+						foreach($relateds as $r){
+							
+							$out["related"][] =
+								$this->fuckhtml
+								->getTextContent(
+									$r
+								);
+						}
+						break;
+				}
+				
+				continue;
+			}
 		}
+		
+		$out["related"] = array_values(array_unique($out["related"]));
 		
 		return $out;
 	}
@@ -1323,6 +1353,8 @@ class google{
 	
 	
 	public function news($get){
+		
+		throw new Exception("Broke for now, fuck off lol");
 		
 		if($get["npt"]){
 			
